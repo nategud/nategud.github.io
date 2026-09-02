@@ -1,3 +1,7 @@
+* {
+  box-sizing: border-box;
+}
+
 html,
 body {
   margin: 0;
@@ -5,52 +9,112 @@ body {
   min-height: 100%;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
-  font-family: Arial, sans-serif;
-  background: white;
+  margin: 0;
+  background: #ffffff;
+  color: #000000;
+  font-family: Arial, Helvetica, sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body.photo-open {
   overflow: hidden;
 }
 
+
+/* --------------------------------
+   HEADER
+-------------------------------- */
+
+.site-header {
+  width: 100%;
+  height: 110px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  padding:
+    max(18px, env(safe-area-inset-top))
+    20px
+    10px;
+
+  position: relative;
+  z-index: 20;
+}
+
+.signature {
+  display: block;
+
+  width: min(260px, 28vw);
+  height: auto;
+
+  object-fit: contain;
+}
+
+
+/* --------------------------------
+   MAIN PAGE
+-------------------------------- */
+
 .home {
-  min-height: 100vh;
+  width: 100%;
+
+  min-height:
+    calc(
+      100svh -
+      110px
+    );
+
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  box-sizing: border-box;
+
+  padding:
+    10px
+    0
+    125px;
 }
 
-.signature {
-  width: 42%;
-  max-width: 600px;
-  height: auto;
-  display: block;
-  margin-bottom: 45px;
-}
+
+/* --------------------------------
+   FILMSTRIP WRAPPER
+-------------------------------- */
 
 .filmstrip-wrapper {
   width: 100%;
-  height: 240px;
+  height: 330px;
+
+  position: relative;
+
   display: flex;
   align-items: center;
-  position: relative;
+
   overflow: hidden;
+
   cursor: grab;
+
   touch-action: pan-y;
+
   -webkit-user-select: none;
   user-select: none;
+
+  -webkit-tap-highlight-color:
+    transparent;
 
   -webkit-mask-image:
     linear-gradient(
       to right,
       transparent 0%,
-      black 6%,
-      black 94%,
+      black 5%,
+      black 95%,
       transparent 100%
     );
 
@@ -58,8 +122,8 @@ body.photo-open {
     linear-gradient(
       to right,
       transparent 0%,
-      black 6%,
-      black 94%,
+      black 5%,
+      black 95%,
       transparent 100%
     );
 }
@@ -68,19 +132,45 @@ body.photo-open {
   cursor: grabbing;
 }
 
+
+/* --------------------------------
+   FILMSTRIP
+-------------------------------- */
+
 .filmstrip {
+  width: max-content;
+
   display: flex;
   align-items: center;
-  gap: 10px;
-  width: max-content;
+
+  gap: 14px;
+
   will-change: transform;
+
+  transform:
+    translate3d(
+      0,
+      0,
+      0
+    );
 }
 
+
+/* --------------------------------
+   PHOTO CARDS
+-------------------------------- */
+
 .photo-card {
-  width: 190px;
-  height: 135px;
-  flex: 0 0 auto;
+  flex:
+    0
+    0
+    255px;
+
+  width: 255px;
+  height: 180px;
+
   position: relative;
+
   cursor: pointer;
 
   transform-origin:
@@ -91,68 +181,111 @@ body.photo-open {
 
   -webkit-user-select: none;
   user-select: none;
+
+  -webkit-tap-highlight-color:
+    transparent;
 }
 
 .photo {
+  display: block;
+
   width: 100%;
   height: 100%;
-  display: block;
+
   object-fit: cover;
 
   pointer-events: none;
 
   -webkit-user-drag: none;
-  -webkit-user-select: none;
   user-select: none;
 }
+
+
+/* --------------------------------
+   LINKS
+-------------------------------- */
 
 .home-links {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 30px;
-  margin-top: 40px;
+
+  gap: 22px;
+
+  margin-top: 34px;
 }
 
 .home-links a {
-  color: black;
+  color: #000000;
+
+  font-size: 14px;
+  font-weight: 400;
+
   text-decoration: none;
+
+  transition:
+    opacity
+    0.2s
+    ease;
 }
+
+.home-links a:hover {
+  opacity: 0.45;
+}
+
+
+/* --------------------------------
+   FOOTER
+-------------------------------- */
 
 .contact-footer {
   position: fixed;
-  bottom: 20px;
+
   left: 0;
+  bottom:
+    max(
+      18px,
+      env(
+        safe-area-inset-bottom
+      )
+    );
+
   width: 100%;
 
   display: flex;
   flex-direction: column;
   align-items: center;
 
-  font-size: 12px;
-  z-index: 10;
+  gap: 2px;
+
+  padding: 0 20px;
+
+  font-size: 11px;
+
+  z-index: 30;
 }
 
 .contact-footer a {
-  color: grey;
+  color: #8a8a8a;
   text-decoration: none;
 }
 
 
 /* --------------------------------
-   DARK BACKGROUND
+   FULLSCREEN BACKGROUND
 -------------------------------- */
 
 .photo-overlay {
   position: fixed;
   inset: 0;
+
   z-index: 900;
 
   background:
     rgba(
-      20,
-      20,
-      20,
+      15,
+      15,
+      15,
       0.58
     );
 
@@ -171,6 +304,8 @@ body.photo-open {
       1
     ),
     visibility
+    0s
+    linear
     0.38s;
 
   -webkit-backdrop-filter:
@@ -183,6 +318,16 @@ body.photo-open {
 .photo-overlay.active {
   opacity: 1;
   visibility: visible;
+
+  transition:
+    opacity
+    0.38s
+    cubic-bezier(
+      0.22,
+      1,
+      0.36,
+      1
+    );
 }
 
 
@@ -192,13 +337,21 @@ body.photo-open {
 
 .expanded-photo {
   position: fixed;
+
   z-index: 1000;
 
   display: block;
 
   object-fit: cover;
 
-  pointer-events: none;
+  /*
+    The image itself receives pointer
+    events, so tapping the photo does
+    NOT accidentally close it.
+  */
+  pointer-events: auto;
+
+  cursor: default;
 
   will-change:
     left,
@@ -207,24 +360,24 @@ body.photo-open {
     height;
 
   box-shadow:
-    0 18px 45px
+    0 18px 50px
     rgba(
       0,
       0,
       0,
       0.18
     ),
-    0 40px 100px
+    0 45px 110px
     rgba(
       0,
       0,
       0,
-      0.22
+      0.24
     );
 
   transition:
     left
-    0.58s
+    0.56s
     cubic-bezier(
       0.22,
       1,
@@ -233,7 +386,7 @@ body.photo-open {
     ),
 
     top
-    0.58s
+    0.56s
     cubic-bezier(
       0.22,
       1,
@@ -242,7 +395,7 @@ body.photo-open {
     ),
 
     width
-    0.58s
+    0.56s
     cubic-bezier(
       0.22,
       1,
@@ -251,7 +404,7 @@ body.photo-open {
     ),
 
     height
-    0.58s
+    0.56s
     cubic-bezier(
       0.22,
       1,
@@ -260,7 +413,7 @@ body.photo-open {
     ),
 
     box-shadow
-    0.58s
+    0.56s
     cubic-bezier(
       0.22,
       1,
@@ -271,52 +424,105 @@ body.photo-open {
 
 
 /* --------------------------------
-   TOUCH DEVICES
+   TABLET
 -------------------------------- */
 
-@media
-  (hover: none)
-  and
-  (pointer: coarse) {
+@media (max-width: 900px) {
+
+  .site-header {
+    height: 95px;
+  }
+
+  .signature {
+    width: min(230px, 38vw);
+  }
+
+  .home {
+    min-height:
+      calc(
+        100svh -
+        95px
+      );
+  }
 
   .filmstrip-wrapper {
-    cursor: default;
+    height: 285px;
+  }
+
+  .filmstrip {
+    gap: 11px;
   }
 
   .photo-card {
-    cursor: default;
+    flex-basis: 215px;
+
+    width: 215px;
+    height: 152px;
   }
 
 }
 
 
 /* --------------------------------
-   MOBILE
+   PHONE
 -------------------------------- */
 
 @media (max-width: 700px) {
 
-  .home {
-    min-height: 100svh;
+  .site-header {
+    height: 82px;
+
+    align-items: flex-start;
+
+    padding:
+      max(
+        14px,
+        env(
+          safe-area-inset-top
+        )
+      )
+      18px
+      4px;
   }
 
   .signature {
-    width: 60%;
-    max-width: 420px;
-    margin-bottom: 30px;
+    width: 150px;
+    max-width: 42vw;
+  }
+
+  .home {
+    min-height:
+      calc(
+        100svh -
+        82px
+      );
+
+    justify-content: center;
+
+    padding:
+      0
+      0
+      105px;
   }
 
   .filmstrip-wrapper {
-    height: 195px;
+    height: 250px;
 
+    /*
+      Vertical page gestures remain
+      available while horizontal
+      gestures control the gallery.
+    */
     touch-action: pan-y;
+
+    cursor: default;
 
     -webkit-mask-image:
       linear-gradient(
         to right,
         transparent 0%,
-        black 3%,
-        black 97%,
+        black 2.5%,
+        black 97.5%,
         transparent 100%
       );
 
@@ -324,42 +530,120 @@ body.photo-open {
       linear-gradient(
         to right,
         transparent 0%,
-        black 3%,
-        black 97%,
+        black 2.5%,
+        black 97.5%,
         transparent 100%
       );
   }
 
   .filmstrip {
-    gap: 7px;
+    gap: 8px;
   }
 
+  /*
+    Explicit dimensions are important.
+    Even on Safari these thumbnails
+    cannot fall back to their giant
+    natural image dimensions.
+  */
+
   .photo-card {
-    width: 145px;
-    height: 105px;
+    flex:
+      0
+      0
+      175px;
+
+    width: 175px;
+    min-width: 175px;
+    max-width: 175px;
+
+    height: 124px;
+    min-height: 124px;
+    max-height: 124px;
+
+    cursor: default;
+
+    /*
+      No mobile magnification.
+    */
+    transform:
+      scale(1);
+  }
+
+  .photo {
+    width: 175px;
+    max-width: 175px;
+
+    height: 124px;
+    max-height: 124px;
+
+    object-fit: cover;
   }
 
   .home-links {
-    gap: 30px;
-    margin-top: 30px;
+    gap: 19px;
+    margin-top: 27px;
+  }
+
+  .home-links a {
+    font-size: 14px;
   }
 
   .contact-footer {
     bottom:
       max(
-        16px,
+        14px,
         env(
           safe-area-inset-bottom
         )
       );
+
+    font-size: 10px;
   }
 
   .photo-overlay {
     -webkit-backdrop-filter:
-      blur(1.5px);
+      blur(1px);
 
     backdrop-filter:
-      blur(1.5px);
+      blur(1px);
+  }
+
+}
+
+
+/* --------------------------------
+   VERY SMALL PHONES
+-------------------------------- */
+
+@media (max-width: 380px) {
+
+  .signature {
+    width: 135px;
+  }
+
+  .filmstrip-wrapper {
+    height: 230px;
+  }
+
+  .photo-card {
+    flex-basis: 160px;
+
+    width: 160px;
+    min-width: 160px;
+    max-width: 160px;
+
+    height: 113px;
+    min-height: 113px;
+    max-height: 113px;
+  }
+
+  .photo {
+    width: 160px;
+    max-width: 160px;
+
+    height: 113px;
+    max-height: 113px;
   }
 
 }
