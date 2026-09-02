@@ -32,7 +32,7 @@ body.photo-open {
 
 .site-header {
   width: 100%;
-  height: 110px;
+  height: 105px;
 
   display: flex;
   justify-content: center;
@@ -41,7 +41,7 @@ body.photo-open {
   padding:
     max(18px, env(safe-area-inset-top))
     20px
-    10px;
+    8px;
 
   position: relative;
   z-index: 20;
@@ -50,7 +50,7 @@ body.photo-open {
 .signature {
   display: block;
 
-  width: min(260px, 28vw);
+  width: min(250px, 26vw);
   height: auto;
 
   object-fit: contain;
@@ -65,7 +65,7 @@ body.photo-open {
   min-height:
     calc(
       100svh -
-      110px
+      105px
     );
 
   display: flex;
@@ -74,7 +74,7 @@ body.photo-open {
   align-items: center;
 
   padding:
-    10px
+    5px
     0
     125px;
 }
@@ -84,7 +84,7 @@ body.photo-open {
 
 .filmstrip-wrapper {
   width: 100%;
-  height: 330px;
+  height: 455px;
 
   position: relative;
 
@@ -92,11 +92,8 @@ body.photo-open {
   align-items: center;
 
   overflow: hidden;
-  overscroll-behavior-x: contain;
 
   cursor: grab;
-
-  touch-action: pan-y;
 
   -webkit-user-select: none;
   user-select: none;
@@ -108,8 +105,8 @@ body.photo-open {
     linear-gradient(
       to right,
       transparent 0%,
-      black 5%,
-      black 95%,
+      black 4%,
+      black 96%,
       transparent 100%
     );
 
@@ -117,8 +114,8 @@ body.photo-open {
     linear-gradient(
       to right,
       transparent 0%,
-      black 5%,
-      black 95%,
+      black 4%,
+      black 96%,
       transparent 100%
     );
 }
@@ -133,7 +130,9 @@ body.photo-open {
   display: flex;
   align-items: center;
 
-  gap: 14px;
+  gap: 18px;
+
+  will-change: transform;
 
   transform:
     translate3d(
@@ -141,8 +140,6 @@ body.photo-open {
       0,
       0
     );
-
-  will-change: transform;
 
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
@@ -155,10 +152,10 @@ body.photo-open {
   flex:
     0
     0
-    255px;
+    430px;
 
-  width: 255px;
-  height: 180px;
+  width: 430px;
+  height: 304px;
 
   position: relative;
 
@@ -209,15 +206,15 @@ body.photo-open {
   flex-direction: column;
   align-items: center;
 
-  gap: 22px;
+  gap: 23px;
 
-  margin-top: 34px;
+  margin-top: 55px;
 }
 
 .home-links a {
   color: #000000;
 
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 400;
 
   text-decoration: none;
@@ -269,7 +266,7 @@ body.photo-open {
 }
 
 
-/* PHOTO BACKGROUND */
+/* PHOTO OVERLAY */
 
 .photo-overlay {
   position: fixed;
@@ -417,14 +414,14 @@ body.photo-open {
 
 /* TABLET */
 
-@media (max-width: 900px) {
+@media (max-width: 1000px) {
 
   .site-header {
     height: 95px;
   }
 
   .signature {
-    width: min(230px, 38vw);
+    width: min(220px, 34vw);
   }
 
   .home {
@@ -436,18 +433,22 @@ body.photo-open {
   }
 
   .filmstrip-wrapper {
-    height: 285px;
+    height: 390px;
   }
 
   .filmstrip {
-    gap: 11px;
+    gap: 14px;
   }
 
   .photo-card {
-    flex-basis: 215px;
+    flex-basis: 350px;
 
-    width: 215px;
-    height: 152px;
+    width: 350px;
+    height: 247px;
+  }
+
+  .home-links {
+    margin-top: 48px;
   }
 
 }
@@ -455,34 +456,36 @@ body.photo-open {
 
 /* PHONE */
 
-@media (max-width: 700px) {
+@media
+  (max-width: 700px),
+  (hover: none) and (pointer: coarse) {
 
   .site-header {
-    height: 82px;
+    height: 80px;
 
     align-items: flex-start;
 
     padding:
       max(
-        14px,
+        13px,
         env(
           safe-area-inset-top
         )
       )
       18px
-      4px;
+      2px;
   }
 
   .signature {
-    width: 150px;
-    max-width: 42vw;
+    width: 145px;
+    max-width: 40vw;
   }
 
   .home {
     min-height:
       calc(
         100svh -
-        82px
+        80px
       );
 
     justify-content: center;
@@ -490,22 +493,51 @@ body.photo-open {
     padding:
       0
       0
-      105px;
+      100px;
   }
 
+
+  /*
+    IMPORTANT:
+    iPhone uses native horizontal
+    scrolling here.
+
+    Safari handles acceleration,
+    momentum and friction itself.
+  */
+
   .filmstrip-wrapper {
-    height: 260px;
+    height: 350px;
+
+    display: block;
+
+    overflow-x: auto;
+    overflow-y: hidden;
 
     cursor: default;
 
-    touch-action: pan-y;
+    touch-action:
+      pan-x
+      pan-y;
+
+    overscroll-behavior-x:
+      contain;
+
+    -webkit-overflow-scrolling:
+      touch;
+
+    scrollbar-width:
+      none;
+
+    -ms-overflow-style:
+      none;
 
     -webkit-mask-image:
       linear-gradient(
         to right,
         transparent 0%,
-        black 2.5%,
-        black 97.5%,
+        black 2%,
+        black 98%,
         transparent 100%
       );
 
@@ -513,47 +545,95 @@ body.photo-open {
       linear-gradient(
         to right,
         transparent 0%,
-        black 2.5%,
-        black 97.5%,
+        black 2%,
+        black 98%,
         transparent 100%
       );
   }
 
-  .filmstrip {
-    gap: 9px;
+  .filmstrip-wrapper::-webkit-scrollbar {
+    display: none;
   }
+
+
+  /*
+    The side padding lets the first
+    and last photographs naturally
+    stop in the center of the screen.
+  */
+
+  .filmstrip {
+    display: flex;
+
+    gap: 12px;
+
+    padding-left:
+      calc(
+        50vw -
+        175px
+      );
+
+    padding-right:
+      calc(
+        50vw -
+        175px
+      );
+
+    transform: none;
+
+    will-change: auto;
+  }
+
+
+  /*
+    350px wide:
+    approximately twice the previous
+    175px mobile thumbnails.
+  */
 
   .photo-card {
     flex:
       0
       0
-      175px;
+      350px;
 
-    width: 175px;
-    min-width: 175px;
-    max-width: 175px;
+    width: 350px;
+    min-width: 350px;
+    max-width: 350px;
 
-    height: 124px;
-    min-height: 124px;
-    max-height: 124px;
+    height: 248px;
+    min-height: 248px;
+    max-height: 248px;
 
     cursor: default;
 
     transform-origin:
       center center;
+
+    will-change:
+      transform;
   }
 
   .photo {
-    width: 175px;
-    max-width: 175px;
+    width: 350px;
+    min-width: 350px;
+    max-width: 350px;
 
-    height: 124px;
-    max-height: 124px;
+    height: 248px;
+    min-height: 248px;
+    max-height: 248px;
   }
 
+
+  /*
+    More space between photography
+    and resume / portfolio.
+  */
+
   .home-links {
-    gap: 19px;
-    margin-top: 27px;
+    gap: 20px;
+
+    margin-top: 48px;
   }
 
   .home-links a {
@@ -588,34 +668,56 @@ body.photo-open {
 @media (max-width: 380px) {
 
   .signature {
-    width: 135px;
+    width: 130px;
   }
 
   .filmstrip-wrapper {
-    height: 240px;
+    height: 320px;
+  }
+
+  .filmstrip {
+    gap: 10px;
+
+    padding-left:
+      calc(
+        50vw -
+        155px
+      );
+
+    padding-right:
+      calc(
+        50vw -
+        155px
+      );
   }
 
   .photo-card {
     flex:
       0
       0
-      160px;
+      310px;
 
-    width: 160px;
-    min-width: 160px;
-    max-width: 160px;
+    width: 310px;
+    min-width: 310px;
+    max-width: 310px;
 
-    height: 113px;
-    min-height: 113px;
-    max-height: 113px;
+    height: 219px;
+    min-height: 219px;
+    max-height: 219px;
   }
 
   .photo {
-    width: 160px;
-    max-width: 160px;
+    width: 310px;
+    min-width: 310px;
+    max-width: 310px;
 
-    height: 113px;
-    max-height: 113px;
+    height: 219px;
+    min-height: 219px;
+    max-height: 219px;
+  }
+
+  .home-links {
+    margin-top: 42px;
   }
 
 }

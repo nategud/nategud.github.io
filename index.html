@@ -9,7 +9,7 @@
 
   <title>nate gudmestad</title>
 
-  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="style.css?v=6">
 </head>
 
 <body>
@@ -87,56 +87,65 @@
     const cards = [...document.querySelectorAll(".photo-card")];
     const overlay = document.getElementById("photoOverlay");
 
-    const finePointer = window.matchMedia(
+    const desktopMode = window.matchMedia(
       "(hover: hover) and (pointer: fine)"
     );
+
+
+    /* DESKTOP FILMSTRIP */
 
     let currentX = 0;
     let targetX = 0;
     let velocity = 0;
 
     let dragging = false;
-    let moved = false;
-    let activePointerType = null;
+    let desktopMoved = false;
 
-    let pointerStartX = 0;
-    let pointerStartY = 0;
+    let dragStartX = 0;
     let lastPointerX = 0;
     let lastMoveTime = 0;
 
-    let hoverX = null;
-    let hoverInside = false;
+    let mouseX = null;
+    let mouseInside = false;
+
+
+    /* TOUCH */
+
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchMoved = false;
+
+
+    /* FULL PHOTO */
 
     let activeImage = null;
     let originalImage = null;
     let closing = false;
 
-    const DESKTOP_MAX_SCALE = 1.34;
-    const DESKTOP_MAGNET_DISTANCE = 190;
 
-    const TOUCH_MAX_SCALE = 1.17;
-    const TOUCH_MAGNET_DISTANCE = 205;
+    /* SETTINGS */
 
-    const SCALE_SMOOTHNESS_DESKTOP = 0.16;
-    const SCALE_SMOOTHNESS_TOUCH = 0.20;
+    const DESKTOP_MAX_SCALE = 1.28;
+    const DESKTOP_MAGNET_DISTANCE = 270;
+    const DESKTOP_SCALE_SPEED = 0.16;
 
-    const STRIP_SMOOTHNESS = 0.12;
-    const SCROLL_SPEED = 1.05;
+    const TOUCH_MAX_SCALE = 1.10;
+    const TOUCH_MAGNET_DISTANCE = 260;
 
+    const TOUCH_SPRING = 0.13;
+    const TOUCH_DAMPING = 0.72;
+
+    const DESKTOP_SCROLL_SPEED = 1.05;
     const DESKTOP_FRICTION = 0.92;
-    const TOUCH_FRICTION = 0.94;
+    const DESKTOP_STRIP_SMOOTHNESS = 0.12;
 
-    const MAX_TOUCH_VELOCITY = 34;
     const DRAG_THRESHOLD = 7;
 
     const PHOTO_ANIMATION_TIME = 560;
 
 
     function clamp(value, min, max) {
-      return Math.max(
-        min,
-        Math.min(max, value)
-      );
+      return Math.max(min, Math.min(max, value));
     }
 
 
@@ -145,7 +154,9 @@
     }
 
 
-    function getBounds() {
+    /* DESKTOP BOUNDS */
+
+    function getDesktopBounds() {
       if (!cards.length) {
         return {
           min: 0,
@@ -153,19 +164,19 @@
         };
       }
 
-      const firstCard = cards[0];
-      const lastCard = cards[cards.length - 1];
+      const first = cards[0];
+      const last = cards[cards.length - 1];
 
       const wrapperCenter =
         wrapper.clientWidth / 2;
 
       const firstCenter =
-        firstCard.offsetLeft +
-        firstCard.offsetWidth / 2;
+        first.offsetLeft +
+        first.offsetWidth / 2;
 
       const lastCenter =
-        lastCard.offsetLeft +
-        lastCard.offsetWidth / 2;
+        last.offsetLeft +
+        last.offsetWidth / 2;
 
       return {
         max: wrapperCenter - firstCenter,
@@ -174,24 +185,29 @@
     }
 
 
-    function clampTarget() {
-      const bounds = getBounds();
+    function clampDesktopTarget() {
+      const bounds =
+        getDesktopBounds();
 
-      targetX = clamp(
-        targetX,
-        bounds.min,
-        bounds.max
-      );
+      targetX =
+        clamp(
+          targetX,
+          bounds.min,
+          bounds.max
+        );
     }
 
 
-    function centerFirstPhoto() {
-      const bounds = getBounds();
+    function centerDesktopStart() {
+      const bounds =
+        getDesktopBounds();
 
       currentX = bounds.max;
       targetX = bounds.max;
     }
 
+
+    /* FULL PHOTO */
 
     function getExpandedSize(image) {
       const naturalWidth =
@@ -201,18 +217,19 @@
         image.naturalHeight || 1;
 
       const ratio =
-        naturalWidth / naturalHeight;
+        naturalWidth /
+        naturalHeight;
 
-      const mobile =
+      const phone =
         window.innerWidth <= 700;
 
       const maxWidth =
         window.innerWidth *
-        (mobile ? 0.92 : 0.88);
+        (phone ? 0.94 : 0.88);
 
       const maxHeight =
         window.innerHeight *
-        (mobile ? 0.78 : 0.86);
+        (phone ? 0.80 : 0.86);
 
       let width = maxWidth;
       let height = width / ratio;
@@ -238,7 +255,9 @@
       }
 
       const target =
-        getExpandedSize(originalImage);
+        getExpandedSize(
+          originalImage
+        );
 
       activeImage.style.left =
         `${(window.innerWidth - target.width) / 2}px`;
@@ -306,8 +325,8 @@
         "active"
       );
 
-      hoverInside = false;
-      hoverX = null;
+      mouseInside = false;
+      mouseX = null;
 
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
@@ -371,10 +390,17 @@
     }
 
 
+    /* DESKTOP WHEEL */
+
     wrapper.addEventListener(
       "wheel",
       event => {
-        if (activeImage) return;
+        if (
+          !desktopMode.matches ||
+          activeImage
+        ) {
+          return;
+        }
 
         event.preventDefault();
 
@@ -385,12 +411,13 @@
             : event.deltaX;
 
         targetX -=
-          amount * SCROLL_SPEED;
+          amount *
+          DESKTOP_SCROLL_SPEED;
 
         velocity =
           -amount * 0.055;
 
-        clampTarget();
+        clampDesktopTarget();
       },
       {
         passive: false
@@ -398,22 +425,23 @@
     );
 
 
+    /* DESKTOP DRAG */
+
     wrapper.addEventListener(
       "pointerdown",
       event => {
-        if (activeImage) return;
+        if (
+          activeImage ||
+          !desktopMode.matches
+        ) {
+          return;
+        }
 
         dragging = true;
-        moved = false;
+        desktopMoved = false;
 
-        activePointerType =
-          event.pointerType;
-
-        pointerStartX =
+        dragStartX =
           event.clientX;
-
-        pointerStartY =
-          event.clientY;
 
         lastPointerX =
           event.clientX;
@@ -422,11 +450,6 @@
           performance.now();
 
         velocity = 0;
-
-        if (finePointer.matches) {
-          hoverInside = true;
-          hoverX = event.clientX;
-        }
 
         try {
           wrapper.setPointerCapture(
@@ -441,14 +464,15 @@
       "pointermove",
       event => {
         if (
-          finePointer.matches &&
+          desktopMode.matches &&
           !activeImage
         ) {
-          hoverInside = true;
-          hoverX = event.clientX;
+          mouseInside = true;
+          mouseX = event.clientX;
         }
 
         if (
+          !desktopMode.matches ||
           !dragging ||
           activeImage
         ) {
@@ -457,14 +481,6 @@
 
         const now =
           performance.now();
-
-        const totalX =
-          event.clientX -
-          pointerStartX;
-
-        const totalY =
-          event.clientY -
-          pointerStartY;
 
         const difference =
           event.clientX -
@@ -477,55 +493,21 @@
           );
 
         if (
-          event.pointerType === "touch"
-        ) {
-          if (
-            !moved &&
-            Math.abs(totalY) >
-            Math.abs(totalX)
-          ) {
-            lastPointerX =
-              event.clientX;
-
-            lastMoveTime = now;
-
-            return;
-          }
-        }
-
-        if (
-          Math.abs(totalX) >
+          Math.abs(
+            event.clientX -
+            dragStartX
+          ) >
           DRAG_THRESHOLD
         ) {
-          moved = true;
+          desktopMoved = true;
         }
 
-        if (moved) {
-          targetX += difference;
+        targetX += difference;
 
-          clampTarget();
+        velocity =
+          (difference / elapsed) * 16;
 
-          const instantVelocity =
-            (difference / elapsed) * 16;
-
-          if (
-            event.pointerType === "touch"
-          ) {
-            const limitedVelocity =
-              clamp(
-                instantVelocity,
-                -MAX_TOUCH_VELOCITY,
-                MAX_TOUCH_VELOCITY
-              );
-
-            velocity =
-              velocity * 0.55 +
-              limitedVelocity * 0.45;
-          } else {
-            velocity =
-              instantVelocity;
-          }
-        }
+        clampDesktopTarget();
 
         lastPointerX =
           event.clientX;
@@ -538,51 +520,19 @@
     wrapper.addEventListener(
       "pointerup",
       event => {
-        if (!dragging) return;
-
-        const wasMoved = moved;
-        const pointerType =
-          activePointerType;
+        if (
+          !desktopMode.matches
+        ) {
+          return;
+        }
 
         dragging = false;
-        activePointerType = null;
 
         try {
           wrapper.releasePointerCapture(
             event.pointerId
           );
         } catch (error) {}
-
-        if (!wasMoved) {
-          velocity = 0;
-
-          const element =
-            document.elementFromPoint(
-              event.clientX,
-              event.clientY
-            );
-
-          const card =
-            element?.closest(
-              ".photo-card"
-            );
-
-          if (card) {
-            const photo =
-              card.querySelector(
-                ".photo"
-              );
-
-            openPhoto(photo);
-          }
-        }
-
-        if (
-          pointerType !== "mouse"
-        ) {
-          hoverInside = false;
-          hoverX = null;
-        }
       }
     );
 
@@ -590,27 +540,29 @@
     wrapper.addEventListener(
       "pointercancel",
       () => {
-        dragging = false;
-        activePointerType = null;
-
-        hoverInside = false;
-        hoverX = null;
+        if (
+          desktopMode.matches
+        ) {
+          dragging = false;
+        }
       }
     );
 
+
+    /* DESKTOP HOVER */
 
     wrapper.addEventListener(
       "pointerenter",
       event => {
         if (
-          !finePointer.matches ||
+          !desktopMode.matches ||
           activeImage
         ) {
           return;
         }
 
-        hoverInside = true;
-        hoverX = event.clientX;
+        mouseInside = true;
+        mouseX = event.clientX;
       }
     );
 
@@ -618,15 +570,129 @@
     wrapper.addEventListener(
       "pointerleave",
       () => {
-        if (!finePointer.matches) {
+        if (
+          !desktopMode.matches
+        ) {
           return;
         }
 
-        hoverInside = false;
-        hoverX = null;
+        mouseInside = false;
+        mouseX = null;
+
+        if (!dragging) {
+          desktopMoved = false;
+        }
       }
     );
 
+
+    /* TOUCH TAP DETECTION */
+
+    wrapper.addEventListener(
+      "touchstart",
+      event => {
+        if (
+          desktopMode.matches ||
+          !event.touches.length
+        ) {
+          return;
+        }
+
+        touchMoved = false;
+
+        touchStartX =
+          event.touches[0].clientX;
+
+        touchStartY =
+          event.touches[0].clientY;
+      },
+      {
+        passive: true
+      }
+    );
+
+
+    wrapper.addEventListener(
+      "touchmove",
+      event => {
+        if (
+          desktopMode.matches ||
+          !event.touches.length
+        ) {
+          return;
+        }
+
+        const x =
+          event.touches[0].clientX;
+
+        const y =
+          event.touches[0].clientY;
+
+        const distanceX =
+          Math.abs(
+            x - touchStartX
+          );
+
+        const distanceY =
+          Math.abs(
+            y - touchStartY
+          );
+
+        if (
+          distanceX >
+          DRAG_THRESHOLD ||
+          distanceY >
+          DRAG_THRESHOLD
+        ) {
+          touchMoved = true;
+        }
+      },
+      {
+        passive: true
+      }
+    );
+
+
+    /* PHOTO CLICKS */
+
+    cards.forEach(card => {
+      card.addEventListener(
+        "click",
+        event => {
+          if (activeImage) {
+            return;
+          }
+
+          if (
+            desktopMode.matches &&
+            desktopMoved
+          ) {
+            event.preventDefault();
+            desktopMoved = false;
+            return;
+          }
+
+          if (
+            !desktopMode.matches &&
+            touchMoved
+          ) {
+            event.preventDefault();
+            touchMoved = false;
+            return;
+          }
+
+          const photo =
+            card.querySelector(
+              ".photo"
+            );
+
+          openPhoto(photo);
+        }
+      );
+    });
+
+
+    /* CLOSE */
 
     overlay.addEventListener(
       "click",
@@ -637,89 +703,42 @@
     document.addEventListener(
       "keydown",
       event => {
-        if (event.key === "Escape") {
+        if (
+          event.key === "Escape"
+        ) {
           closePhoto();
         }
       }
     );
 
 
-    function updateMagnification() {
-      /*
-        Freeze thumbnail transforms while
-        a photo is expanded so the closing
-        animation returns to the exact same
-        visual position and size.
-      */
+    /* DESKTOP MAGNIFICATION */
 
-      if (activeImage) {
-        return;
-      }
-
-      let focalX;
-      let maxScale;
-      let magnetDistance;
-      let smoothness;
-
-      if (finePointer.matches) {
-        if (
-          !hoverInside ||
-          hoverX === null
-        ) {
-          focalX = null;
-        } else {
-          focalX = hoverX;
-        }
-
-        maxScale =
-          DESKTOP_MAX_SCALE;
-
-        magnetDistance =
-          DESKTOP_MAGNET_DISTANCE;
-
-        smoothness =
-          SCALE_SMOOTHNESS_DESKTOP;
-      } else {
-        /*
-          On touch screens the center of
-          the viewport acts like the hover
-          position.
-
-          As photos move through the center,
-          they smoothly grow and shrink.
-        */
-
-        focalX =
-          wrapper.clientWidth / 2;
-
-        maxScale =
-          TOUCH_MAX_SCALE;
-
-        magnetDistance =
-          TOUCH_MAGNET_DISTANCE;
-
-        smoothness =
-          SCALE_SMOOTHNESS_TOUCH;
-      }
-
+    function updateDesktopMagnification() {
       cards.forEach(card => {
         let targetScale = 1;
 
-        if (focalX !== null) {
-          const cardCenter =
-            card.offsetLeft +
-            card.offsetWidth / 2 +
-            currentX;
+        if (
+          mouseInside &&
+          mouseX !== null &&
+          !activeImage
+        ) {
+          const rect =
+            card.getBoundingClientRect();
+
+          const center =
+            rect.left +
+            rect.width / 2;
 
           const distance =
             Math.abs(
-              focalX - cardCenter
+              mouseX - center
             );
 
           let influence =
             1 -
             distance /
-            magnetDistance;
+            DESKTOP_MAGNET_DISTANCE;
 
           influence =
             clamp(
@@ -734,7 +753,10 @@
           targetScale =
             1 +
             influence *
-            (maxScale - 1);
+            (
+              DESKTOP_MAX_SCALE -
+              1
+            );
         }
 
         if (
@@ -749,48 +771,131 @@
             targetScale -
             card.currentScale
           ) *
-          smoothness;
+          DESKTOP_SCALE_SPEED;
 
         card.style.transform =
           `translateZ(0) scale(${card.currentScale})`;
 
         card.style.zIndex =
           Math.round(
-            card.currentScale * 100
+            card.currentScale *
+            100
           );
       });
     }
 
 
-    function animate() {
-      if (
-        dragging &&
-        activePointerType === "touch"
-      ) {
-        /*
-          Touch should feel physically
-          attached to the finger.
-        */
+    /* TOUCH CENTER MAGNIFICATION */
 
-        currentX = targetX;
-      } else {
+    function updateTouchMagnification() {
+      if (activeImage) {
+        return;
+      }
+
+      const wrapperRect =
+        wrapper.getBoundingClientRect();
+
+      const focalPoint =
+        wrapperRect.left +
+        wrapperRect.width / 2;
+
+      cards.forEach(card => {
+        const rect =
+          card.getBoundingClientRect();
+
+        const center =
+          rect.left +
+          rect.width / 2;
+
+        const distance =
+          Math.abs(
+            focalPoint -
+            center
+          );
+
+        let influence =
+          1 -
+          distance /
+          TOUCH_MAGNET_DISTANCE;
+
+        influence =
+          clamp(
+            influence,
+            0,
+            1
+          );
+
+        influence =
+          smoothstep(influence);
+
+        const targetScale =
+          1 +
+          influence *
+          (
+            TOUCH_MAX_SCALE -
+            1
+          );
+
+        if (
+          card.currentScale ===
+          undefined
+        ) {
+          card.currentScale = 1;
+        }
+
+        if (
+          card.scaleVelocity ===
+          undefined
+        ) {
+          card.scaleVelocity = 0;
+        }
+
+        const springForce =
+          (
+            targetScale -
+            card.currentScale
+          ) *
+          TOUCH_SPRING;
+
+        card.scaleVelocity +=
+          springForce;
+
+        card.scaleVelocity *=
+          TOUCH_DAMPING;
+
+        card.currentScale +=
+          card.scaleVelocity;
+
+        card.style.transform =
+          `translateZ(0) scale(${card.currentScale})`;
+
+        card.style.zIndex =
+          Math.round(
+            card.currentScale *
+            100
+          );
+      });
+    }
+
+
+    /* ANIMATION */
+
+    function animate() {
+      if (desktopMode.matches) {
+
         if (
           !dragging &&
           !activeImage
         ) {
           targetX += velocity;
 
-          clampTarget();
+          clampDesktopTarget();
 
-          const friction =
-            finePointer.matches
-              ? DESKTOP_FRICTION
-              : TOUCH_FRICTION;
-
-          velocity *= friction;
+          velocity *=
+            DESKTOP_FRICTION;
 
           const bounds =
-            getBounds();
+            getDesktopBounds();
 
           if (
             targetX <= bounds.min ||
@@ -800,7 +905,8 @@
           }
 
           if (
-            Math.abs(velocity) < 0.01
+            Math.abs(velocity) <
+            0.01
           ) {
             velocity = 0;
           }
@@ -811,13 +917,20 @@
             targetX -
             currentX
           ) *
-          STRIP_SMOOTHNESS;
+          DESKTOP_STRIP_SMOOTHNESS;
+
+        strip.style.transform =
+          `translate3d(${currentX}px, 0, 0)`;
+
+        updateDesktopMagnification();
+
+      } else {
+
+        strip.style.transform =
+          "none";
+
+        updateTouchMagnification();
       }
-
-      strip.style.transform =
-        `translate3d(${currentX}px, 0, 0)`;
-
-      updateMagnification();
 
       requestAnimationFrame(
         animate
@@ -825,16 +938,26 @@
     }
 
 
+    /* RESIZE */
+
     window.addEventListener(
       "resize",
       () => {
-        clampTarget();
+        if (
+          desktopMode.matches
+        ) {
+          clampDesktopTarget();
 
-        currentX = clamp(
-          currentX,
-          getBounds().min,
-          getBounds().max
-        );
+          const bounds =
+            getDesktopBounds();
+
+          currentX =
+            clamp(
+              currentX,
+              bounds.min,
+              bounds.max
+            );
+        }
 
         if (
           activeImage &&
@@ -847,14 +970,22 @@
     );
 
 
+    /* START */
+
     window.addEventListener(
       "load",
       () => {
-        centerFirstPhoto();
+        if (
+          desktopMode.matches
+        ) {
+          centerDesktopStart();
+        } else {
+          wrapper.scrollLeft = 0;
+        }
+
         animate();
       }
     );
-
   </script>
 
 </body>
