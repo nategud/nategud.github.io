@@ -1,48 +1,60 @@
-h1{
-    font-family:Arial, sans-serif;
-    font-size: larger;
-    font-weight: lighter;
-    color:black;
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
 }
 .home {
   min-height: 100vh;
-
   display: flex;
   flex-direction: column;
-
   justify-content: center;
   align-items: center;
-
-  text-align: center;
 }
 .signature {
-  width: 25%;
+  width: 50%;
   height: auto;
   display: block;
   margin-left: auto;
   margin-right: auto;
+  margin-bottom: 30px;
 }
 .home-links {
   display: flex;
-  justify-content: center;
-  gap: 40px;
-  margin-top: 15px;
-}
-.contact-footer {
-  position: fixed;
-  right: 20px;
-  bottom: 20px;
-
-  display: flex;
   flex-direction: column;
-  align-items: flex-end;
-
-  font-size: 12px;
-  line-height: 1.4;
+  align-items: center;
+  gap: 30px;
 }
-
-.contact-footer a {
+.home-links a {
+  font-family: Arial, sans-serif;
   color: black;
   text-decoration: none;
 }
+.contact-footer {
+  position: fixed;
+  bottom: 20px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+}
 
+.contact-footer a {
+  color: grey;
+  text-decoration: none;
+}
+
+/* PHONE */
+
+@media (max-width: 700px) {
+
+  .home-links {
+    gap: 30px;
+  }
+
+  .signature {
+    width: 60%;
+  }
+
+}
