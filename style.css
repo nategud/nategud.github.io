@@ -28,9 +28,7 @@ body.photo-open {
 }
 
 
-/* --------------------------------
-   HEADER
--------------------------------- */
+/* HEADER */
 
 .site-header {
   width: 100%;
@@ -59,9 +57,7 @@ body.photo-open {
 }
 
 
-/* --------------------------------
-   MAIN PAGE
--------------------------------- */
+/* MAIN */
 
 .home {
   width: 100%;
@@ -84,9 +80,7 @@ body.photo-open {
 }
 
 
-/* --------------------------------
-   FILMSTRIP WRAPPER
--------------------------------- */
+/* FILMSTRIP */
 
 .filmstrip-wrapper {
   width: 100%;
@@ -98,6 +92,7 @@ body.photo-open {
   align-items: center;
 
   overflow: hidden;
+  overscroll-behavior-x: contain;
 
   cursor: grab;
 
@@ -132,11 +127,6 @@ body.photo-open {
   cursor: grabbing;
 }
 
-
-/* --------------------------------
-   FILMSTRIP
--------------------------------- */
-
 .filmstrip {
   width: max-content;
 
@@ -145,20 +135,21 @@ body.photo-open {
 
   gap: 14px;
 
-  will-change: transform;
-
   transform:
     translate3d(
       0,
       0,
       0
     );
+
+  will-change: transform;
+
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 
-/* --------------------------------
-   PHOTO CARDS
--------------------------------- */
+/* PHOTOS */
 
 .photo-card {
   flex:
@@ -176,8 +167,14 @@ body.photo-open {
   transform-origin:
     center center;
 
-  will-change:
-    transform;
+  transform:
+    translateZ(0)
+    scale(1);
+
+  will-change: transform;
+
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 
   -webkit-user-select: none;
   user-select: none;
@@ -197,13 +194,15 @@ body.photo-open {
   pointer-events: none;
 
   -webkit-user-drag: none;
+  -webkit-user-select: none;
   user-select: none;
+
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 
-/* --------------------------------
-   LINKS
--------------------------------- */
+/* LINKS */
 
 .home-links {
   display: flex;
@@ -234,14 +233,13 @@ body.photo-open {
 }
 
 
-/* --------------------------------
-   FOOTER
--------------------------------- */
+/* FOOTER */
 
 .contact-footer {
   position: fixed;
 
   left: 0;
+
   bottom:
     max(
       18px,
@@ -271,9 +269,7 @@ body.photo-open {
 }
 
 
-/* --------------------------------
-   FULLSCREEN BACKGROUND
--------------------------------- */
+/* PHOTO BACKGROUND */
 
 .photo-overlay {
   position: fixed;
@@ -331,9 +327,7 @@ body.photo-open {
 }
 
 
-/* --------------------------------
-   EXPANDED PHOTO
--------------------------------- */
+/* EXPANDED PHOTO */
 
 .expanded-photo {
   position: fixed;
@@ -344,11 +338,6 @@ body.photo-open {
 
   object-fit: cover;
 
-  /*
-    The image itself receives pointer
-    events, so tapping the photo does
-    NOT accidentally close it.
-  */
   pointer-events: auto;
 
   cursor: default;
@@ -358,6 +347,9 @@ body.photo-open {
     top,
     width,
     height;
+
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 
   box-shadow:
     0 18px 50px
@@ -423,9 +415,7 @@ body.photo-open {
 }
 
 
-/* --------------------------------
-   TABLET
--------------------------------- */
+/* TABLET */
 
 @media (max-width: 900px) {
 
@@ -463,9 +453,7 @@ body.photo-open {
 }
 
 
-/* --------------------------------
-   PHONE
--------------------------------- */
+/* PHONE */
 
 @media (max-width: 700px) {
 
@@ -506,16 +494,11 @@ body.photo-open {
   }
 
   .filmstrip-wrapper {
-    height: 250px;
-
-    /*
-      Vertical page gestures remain
-      available while horizontal
-      gestures control the gallery.
-    */
-    touch-action: pan-y;
+    height: 260px;
 
     cursor: default;
+
+    touch-action: pan-y;
 
     -webkit-mask-image:
       linear-gradient(
@@ -537,15 +520,8 @@ body.photo-open {
   }
 
   .filmstrip {
-    gap: 8px;
+    gap: 9px;
   }
-
-  /*
-    Explicit dimensions are important.
-    Even on Safari these thumbnails
-    cannot fall back to their giant
-    natural image dimensions.
-  */
 
   .photo-card {
     flex:
@@ -563,11 +539,8 @@ body.photo-open {
 
     cursor: default;
 
-    /*
-      No mobile magnification.
-    */
-    transform:
-      scale(1);
+    transform-origin:
+      center center;
   }
 
   .photo {
@@ -576,8 +549,6 @@ body.photo-open {
 
     height: 124px;
     max-height: 124px;
-
-    object-fit: cover;
   }
 
   .home-links {
@@ -612,9 +583,7 @@ body.photo-open {
 }
 
 
-/* --------------------------------
-   VERY SMALL PHONES
--------------------------------- */
+/* SMALL PHONES */
 
 @media (max-width: 380px) {
 
@@ -623,11 +592,14 @@ body.photo-open {
   }
 
   .filmstrip-wrapper {
-    height: 230px;
+    height: 240px;
   }
 
   .photo-card {
-    flex-basis: 160px;
+    flex:
+      0
+      0
+      160px;
 
     width: 160px;
     min-width: 160px;
