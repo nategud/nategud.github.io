@@ -4,25 +4,840 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>nate gudmestad</title>
-  
   <link rel="stylesheet" href="style.css">
-  
 </head>
 
 <body>
+
   <main class="home">
-    <img class="signature" src="signature.png">
-  <br />
-  <br />
-   <div class="home-links">
-    <a href="resume/resume.html">resume</a>
-    <a href="portfolio/nategud_portfolio_2026_16x9.pdf">portfolio</a>
+
+    <img
+      class="signature"
+      src="signature.png"
+      alt="Nate Gudmestad signature"
+    >
+
+    <div class="filmstrip-wrapper" id="filmstripWrapper">
+
+      <div class="filmstrip" id="filmstrip">
+
+        <div class="photo-card">
+          <img src="photos/photo1.jpg" class="photo" alt="">
+        </div>
+
+        <div class="photo-card">
+          <img src="photos/photo2.jpg" class="photo" alt="">
+        </div>
+
+        <div class="photo-card">
+          <img src="photos/photo3.jpg" class="photo" alt="">
+        </div>
+
+        <div class="photo-card">
+          <img src="photos/photo4.jpg" class="photo" alt="">
+        </div>
+
+        <div class="photo-card">
+          <img src="photos/photo5.jpg" class="photo" alt="">
+        </div>
+
+        <div class="photo-card">
+          <img src="photos/photo6.jpg" class="photo" alt="">
+        </div>
+
+        <div class="photo-card">
+          <img src="photos/photo7.jpg" class="photo" alt="">
+        </div>
+
+        <div class="photo-card">
+          <img src="photos/photo8.jpg" class="photo" alt="">
+        </div>
+
+        <div class="photo-card">
+          <img src="photos/photo9.jpg" class="photo" alt="">
+        </div>
+
+        <div class="photo-card">
+          <img src="photos/photo10.jpg" class="photo" alt="">
+        </div>
+
+        <div class="photo-card">
+          <img src="photos/photo11.jpg" class="photo" alt="">
+        </div>
+
+        <div class="photo-card">
+          <img src="photos/photo12.jpg" class="photo" alt="">
+        </div>
+
+        <div class="photo-card">
+          <img src="photos/photo13.jpg" class="photo" alt="">
+        </div>
+
+        <div class="photo-card">
+          <img src="photos/photo14.jpg" class="photo" alt="">
+        </div>
+
+        <div class="photo-card">
+          <img src="photos/photo15.jpg" class="photo" alt="">
+        </div>
+
+        <div class="photo-card">
+          <img src="photos/photo16.jpg" class="photo" alt="">
+        </div>
+
+        <div class="photo-card">
+          <img src="photos/photo17.jpg" class="photo" alt="">
+        </div>
+
+        <div class="photo-card">
+          <img src="photos/photo18.jpg" class="photo" alt="">
+        </div>
+
+        <div class="photo-card">
+          <img src="photos/photo19.jpg" class="photo" alt="">
+        </div>
+
+        <div class="photo-card">
+          <img src="photos/photo20.jpg" class="photo" alt="">
+        </div>
+
+        <div class="photo-card">
+          <img src="photos/photo21.jpg" class="photo" alt="">
+        </div>
+
+        <div class="photo-card">
+          <img src="photos/photo22.jpg" class="photo" alt="">
+        </div>
+
+        <div class="photo-card">
+          <img src="photos/photo23.jpg" class="photo" alt="">
+        </div>
+
+        <div class="photo-card">
+          <img src="photos/photo24.jpg" class="photo" alt="">
+        </div>
+
+        <div class="photo-card">
+          <img src="photos/photo25.jpg" class="photo" alt="">
+        </div>
+
+      </div>
+
     </div>
+
+    <div class="home-links">
+      <a href="resume/resume.html">resume</a>
+      <a href="portfolio/nategud_portfolio_2026_16x9.pdf">
+        portfolio
+      </a>
+    </div>
+
   </main>
+
   <footer class="contact-footer">
-  <a href="mailto:nategud@gmail.com">nategud@gmail.com</a>
-  <a href="tel:+12085507000">+1 208 550 7000</a>
-</footer>
-  
+    <a href="mailto:nategud@gmail.com">
+      nategud@gmail.com
+    </a>
+
+    <a href="tel:+12085507000">
+      +1 208 550 7000
+    </a>
+  </footer>
+
+  <div
+    class="photo-overlay"
+    id="photoOverlay"
+  ></div>
+
+  <script>
+    const wrapper =
+      document.getElementById("filmstripWrapper");
+
+    const strip =
+      document.getElementById("filmstrip");
+
+    const cards =
+      [...document.querySelectorAll(".photo-card")];
+
+    const overlay =
+      document.getElementById("photoOverlay");
+
+
+    /* -----------------------------
+       FILMSTRIP STATE
+    ----------------------------- */
+
+    let currentX = 0;
+    let targetX = 0;
+    let velocity = 0;
+
+    let dragging = false;
+    let movedWhileDragging = false;
+
+    let pointerStartX = 0;
+    let lastPointerX = 0;
+    let lastMoveTime = 0;
+
+    let pointerX = null;
+    let pointerInside = false;
+
+
+    /* -----------------------------
+       EXPANDED PHOTO STATE
+    ----------------------------- */
+
+    let activeImage = null;
+    let originalImage = null;
+    let closing = false;
+
+
+    /* -----------------------------
+       SETTINGS
+    ----------------------------- */
+
+    const MAX_SCALE = 1.32;
+    const MAGNET_DISTANCE = 180;
+    const MAGNET_SMOOTHNESS = 0.16;
+
+    const SCROLL_SPEED = 1.1;
+    const STRIP_SMOOTHNESS = 0.1;
+    const FRICTION = 0.93;
+
+    const PHOTO_ANIMATION_TIME = 580;
+
+
+    /* -----------------------------
+       INITIAL POSITION
+    ----------------------------- */
+
+    function centerFirstPhoto() {
+      if (!cards.length) return;
+
+      const firstCard = cards[0];
+
+      const wrapperCenter =
+        wrapper.clientWidth / 2;
+
+      const cardCenter =
+        firstCard.offsetLeft +
+        firstCard.offsetWidth / 2;
+
+      currentX =
+        wrapperCenter - cardCenter;
+
+      targetX = currentX;
+    }
+
+
+    /* -----------------------------
+       FULLSCREEN PHOTO SIZE
+    ----------------------------- */
+
+    function getExpandedSize(image) {
+      const maxWidth =
+        window.innerWidth * 0.88;
+
+      const maxHeight =
+        window.innerHeight * 0.86;
+
+      const ratio =
+        image.naturalWidth /
+        image.naturalHeight;
+
+      let width = maxWidth;
+      let height = width / ratio;
+
+      if (height > maxHeight) {
+        height = maxHeight;
+        width = height * ratio;
+      }
+
+      return {
+        width,
+        height
+      };
+    }
+
+
+    /* -----------------------------
+       OPEN PHOTO
+    ----------------------------- */
+
+    function openPhoto(photo) {
+      if (
+        activeImage ||
+        closing ||
+        movedWhileDragging
+      ) {
+        return;
+      }
+
+      velocity = 0;
+      dragging = false;
+
+      originalImage = photo;
+
+      const start =
+        photo.getBoundingClientRect();
+
+      const enlarged =
+        document.createElement("img");
+
+      enlarged.src = photo.src;
+      enlarged.className = "expanded-photo";
+
+      enlarged.style.left =
+        `${start.left}px`;
+
+      enlarged.style.top =
+        `${start.top}px`;
+
+      enlarged.style.width =
+        `${start.width}px`;
+
+      enlarged.style.height =
+        `${start.height}px`;
+
+      document.body.appendChild(enlarged);
+
+      activeImage = enlarged;
+
+      originalImage.style.visibility =
+        "hidden";
+
+      overlay.classList.add("active");
+
+      document.body.classList.add(
+        "photo-open"
+      );
+
+      resetMagnification();
+
+      requestAnimationFrame(() => {
+
+        requestAnimationFrame(() => {
+
+          if (!activeImage) return;
+
+          const target =
+            getExpandedSize(activeImage);
+
+          activeImage.style.left =
+            `${
+              (
+                window.innerWidth -
+                target.width
+              ) / 2
+            }px`;
+
+          activeImage.style.top =
+            `${
+              (
+                window.innerHeight -
+                target.height
+              ) / 2
+            }px`;
+
+          activeImage.style.width =
+            `${target.width}px`;
+
+          activeImage.style.height =
+            `${target.height}px`;
+
+        });
+
+      });
+    }
+
+
+    /* -----------------------------
+       CLOSE PHOTO
+    ----------------------------- */
+
+    function closePhoto() {
+      if (
+        !activeImage ||
+        !originalImage ||
+        closing
+      ) {
+        return;
+      }
+
+      closing = true;
+
+      const imageToRemove = activeImage;
+      const imageToRestore = originalImage;
+
+      const end =
+        imageToRestore.getBoundingClientRect();
+
+      imageToRemove.style.left =
+        `${end.left}px`;
+
+      imageToRemove.style.top =
+        `${end.top}px`;
+
+      imageToRemove.style.width =
+        `${end.width}px`;
+
+      imageToRemove.style.height =
+        `${end.height}px`;
+
+      overlay.classList.remove("active");
+
+      window.setTimeout(() => {
+
+        imageToRestore.style.visibility =
+          "visible";
+
+        imageToRemove.remove();
+
+        activeImage = null;
+        originalImage = null;
+        closing = false;
+
+        document.body.classList.remove(
+          "photo-open"
+        );
+
+        velocity = 0;
+
+      }, PHOTO_ANIMATION_TIME + 40);
+    }
+
+
+    /* -----------------------------
+       RESET HOVER
+    ----------------------------- */
+
+    function resetMagnification() {
+      pointerInside = false;
+      pointerX = null;
+    }
+
+
+    /* -----------------------------
+       PAGE EVENTS
+    ----------------------------- */
+
+    window.addEventListener(
+      "load",
+      centerFirstPhoto
+    );
+
+    window.addEventListener(
+      "resize",
+      () => {
+
+        if (
+          activeImage &&
+          !closing
+        ) {
+
+          const target =
+            getExpandedSize(activeImage);
+
+          activeImage.style.left =
+            `${
+              (
+                window.innerWidth -
+                target.width
+              ) / 2
+            }px`;
+
+          activeImage.style.top =
+            `${
+              (
+                window.innerHeight -
+                target.height
+              ) / 2
+            }px`;
+
+          activeImage.style.width =
+            `${target.width}px`;
+
+          activeImage.style.height =
+            `${target.height}px`;
+
+        }
+
+      }
+    );
+
+
+    /* -----------------------------
+       WHEEL / TRACKPAD
+    ----------------------------- */
+
+    wrapper.addEventListener(
+      "wheel",
+      event => {
+
+        if (activeImage) return;
+
+        event.preventDefault();
+
+        const amount =
+          Math.abs(event.deltaY) >
+          Math.abs(event.deltaX)
+            ? event.deltaY
+            : event.deltaX;
+
+        targetX -=
+          amount * SCROLL_SPEED;
+
+        velocity =
+          -amount * 0.07;
+
+      },
+      {
+        passive: false
+      }
+    );
+
+
+    /* -----------------------------
+       POINTER DOWN
+    ----------------------------- */
+
+    wrapper.addEventListener(
+      "pointerdown",
+      event => {
+
+        if (activeImage) return;
+
+        dragging = true;
+
+        movedWhileDragging = false;
+
+        pointerStartX =
+          event.clientX;
+
+        lastPointerX =
+          event.clientX;
+
+        lastMoveTime =
+          performance.now();
+
+        pointerX =
+          event.clientX;
+
+        pointerInside = true;
+
+        velocity = 0;
+
+      }
+    );
+
+
+    /* -----------------------------
+       POINTER MOVE
+    ----------------------------- */
+
+    wrapper.addEventListener(
+      "pointermove",
+      event => {
+
+        pointerX =
+          event.clientX;
+
+        pointerInside = true;
+
+        if (
+          !dragging ||
+          activeImage
+        ) {
+          return;
+        }
+
+        const now =
+          performance.now();
+
+        const difference =
+          event.clientX -
+          lastPointerX;
+
+        const elapsed =
+          Math.max(
+            now - lastMoveTime,
+            1
+          );
+
+        if (
+          Math.abs(
+            event.clientX -
+            pointerStartX
+          ) > 6
+        ) {
+          movedWhileDragging = true;
+        }
+
+        targetX += difference;
+
+        velocity =
+          (
+            difference /
+            elapsed
+          ) * 16;
+
+        lastPointerX =
+          event.clientX;
+
+        lastMoveTime = now;
+
+      }
+    );
+
+
+    /* -----------------------------
+       POINTER UP
+    ----------------------------- */
+
+    wrapper.addEventListener(
+      "pointerup",
+      event => {
+
+        dragging = false;
+
+        if (
+          event.pointerType !== "mouse"
+        ) {
+          resetMagnification();
+        }
+
+      }
+    );
+
+
+    wrapper.addEventListener(
+      "pointercancel",
+      () => {
+
+        dragging = false;
+
+        resetMagnification();
+
+      }
+    );
+
+
+    /* -----------------------------
+       DESKTOP HOVER
+    ----------------------------- */
+
+    wrapper.addEventListener(
+      "pointerenter",
+      event => {
+
+        if (
+          event.pointerType !== "mouse"
+        ) {
+          return;
+        }
+
+        pointerInside = true;
+
+        pointerX =
+          event.clientX;
+
+      }
+    );
+
+
+    wrapper.addEventListener(
+      "pointerleave",
+      event => {
+
+        dragging = false;
+
+        if (
+          event.pointerType === "mouse"
+        ) {
+          resetMagnification();
+        }
+
+      }
+    );
+
+
+    /* -----------------------------
+       PHOTO CLICK
+    ----------------------------- */
+
+    cards.forEach(card => {
+
+      card.addEventListener(
+        "click",
+        () => {
+
+          if (
+            movedWhileDragging ||
+            activeImage
+          ) {
+            return;
+          }
+
+          const photo =
+            card.querySelector(".photo");
+
+          openPhoto(photo);
+
+        }
+      );
+
+    });
+
+
+    /* -----------------------------
+       CLOSE EVENTS
+    ----------------------------- */
+
+    overlay.addEventListener(
+      "click",
+      closePhoto
+    );
+
+
+    document.addEventListener(
+      "keydown",
+      event => {
+
+        if (
+          event.key === "Escape"
+        ) {
+          closePhoto();
+        }
+
+      }
+    );
+
+
+    /* -----------------------------
+       HOVER MAGNIFICATION
+    ----------------------------- */
+
+    function updateMagnification() {
+
+      cards.forEach(card => {
+
+        let targetScale = 1;
+
+        if (
+          pointerInside &&
+          pointerX !== null &&
+          !activeImage
+        ) {
+
+          const rect =
+            card.getBoundingClientRect();
+
+          const center =
+            rect.left +
+            rect.width / 2;
+
+          const distance =
+            Math.abs(
+              pointerX - center
+            );
+
+          let influence =
+            1 -
+            distance /
+            MAGNET_DISTANCE;
+
+          influence =
+            Math.max(
+              0,
+              Math.min(
+                1,
+                influence
+              )
+            );
+
+          influence =
+            influence *
+            influence *
+            (
+              3 -
+              2 * influence
+            );
+
+          targetScale =
+            1 +
+            influence *
+            (
+              MAX_SCALE - 1
+            );
+        }
+
+        if (
+          card.currentScale === undefined
+        ) {
+          card.currentScale = 1;
+        }
+
+        card.currentScale +=
+          (
+            targetScale -
+            card.currentScale
+          ) *
+          MAGNET_SMOOTHNESS;
+
+        card.style.transform =
+          `scale(${card.currentScale})`;
+
+        card.style.zIndex =
+          Math.round(
+            card.currentScale * 100
+          );
+
+      });
+    }
+
+
+    /* -----------------------------
+       MAIN ANIMATION LOOP
+    ----------------------------- */
+
+    function animate() {
+
+      if (
+        !dragging &&
+        !activeImage
+      ) {
+
+        targetX += velocity;
+
+        velocity *= FRICTION;
+
+        if (
+          Math.abs(velocity) < 0.01
+        ) {
+          velocity = 0;
+        }
+
+      }
+
+      currentX +=
+        (
+          targetX -
+          currentX
+        ) *
+        STRIP_SMOOTHNESS;
+
+      strip.style.transform =
+        `translate3d(${currentX}px, 0, 0)`;
+
+      updateMagnification();
+
+      requestAnimationFrame(
+        animate
+      );
+    }
+
+    animate();
+
+  </script>
+
 </body>
 </html>
