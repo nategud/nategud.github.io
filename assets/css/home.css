@@ -1,0 +1,52 @@
+body {
+  overflow-x: hidden;
+}
+
+.home {
+  width: 100%;
+  min-height: calc(100svh - clamp(92px, 14svh, 128px));
+  display: grid;
+  place-items: center;
+  padding: 18px 24px max(36px, env(safe-area-inset-bottom));
+}
+
+.home-links {
+  width: min(430px, 100%);
+  display: grid;
+  grid-auto-rows: minmax(48px, auto);
+  align-items: center;
+  justify-items: center;
+  gap: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Match the closed photography list; glass hover and entrance are shared. */
+.home-title {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 9px 0;
+  color: #000000;
+  font: 400 1rem/1.5 Arial, Helvetica, sans-serif;
+  text-decoration: none;
+}
+.home-title:focus-visible {
+  outline: 1px solid currentColor;
+  outline-offset: 4px;
+}
+
+@media (max-width: 700px) {
+  .home {
+    min-height: calc(100svh - 86px);
+    padding: 8px 20px max(28px, env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-height: 620px) {
+  .site-header { height: 76px; }
+  .home {
+    min-height: calc(100svh - 76px);
+    padding-top: 4px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+}

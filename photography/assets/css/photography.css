@@ -1,0 +1,186 @@
+body { overflow-x: hidden; }
+.site-header { z-index: 10; }
+
+.photography {
+  --photo-height: 94px;
+  --ease: cubic-bezier(.2, .82, .22, 1);
+  --flow-time: 760ms;
+  --fade-width: 36px;
+  --copy-left: max(20px, calc(50vw - 430px));
+  --copy-width: clamp(140px, 17vw, 230px);
+  --copy-gap: clamp(18px, 3vw, 40px);
+  --rail-left: calc(var(--copy-left) + var(--copy-width) + var(--copy-gap));
+  min-height: 100svh;
+  padding: max(140px, 40svh) 0 max(100px, calc(env(safe-area-inset-bottom) + 88px));
+}
+
+.project-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  transform: translateY(0);
+  transition: transform var(--flow-time) var(--ease);
+}
+.photography.has-selection .project-list { transform: translateY(-18px); }
+.project { position: relative; text-align: center; }
+/* Join the open project's title, caption, and photos into one hover area.
+   This sits behind the links, follows the animated row, and excludes the left margin. */
+.project-hover-bridge {
+  position: absolute;
+  inset: 0 0 0 var(--copy-left);
+  pointer-events: none;
+}
+.project.is-selected .project-hover-bridge { pointer-events: auto; }
+.project-title {
+  position: relative;
+  display: inline-flex;
+  vertical-align: top;
+  align-items: center;
+  min-height: 48px;
+  padding: 9px 0;
+  color: #686868;
+  text-decoration: none;
+  font: 400 1rem/1.5 Arial, Helvetica, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  transform: translateY(0);
+  transition:
+    color 180ms ease,
+    font-size 580ms cubic-bezier(.2, .9, .25, 1.12),
+    transform 580ms cubic-bezier(.2, .9, .25, 1.12);
+}
+.project-title-text {
+  vertical-align: middle;
+}
+/* Selection stays visible while the pointer is over photos or the caption.
+   The larger text fits the existing 48px title row; shared glass hover stays inside. */
+.project.is-selected .project-title {
+  color: #000;
+  font-size: 1.25rem;
+  transform: translateY(-2px);
+}
+.project-title:focus-visible, .project-description:focus-visible {
+  outline: 1px solid currentColor;
+  outline-offset: 4px;
+}
+
+/* Keep the real layout and its pointer targets moving together. */
+.project-reveal {
+  position: relative;
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    grid-template-rows var(--flow-time) cubic-bezier(.4, 0, .2, 1),
+    opacity 260ms ease,
+    visibility var(--flow-time);
+}
+.project.is-selected .project-reveal {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition:
+    grid-template-rows var(--flow-time) var(--ease),
+    opacity 420ms ease,
+    visibility 0s;
+}
+.project-reveal-clip { min-height: 0; overflow: hidden; pointer-events: none; }
+.project-reveal-inner {
+  display: grid;
+  grid-template-columns: var(--copy-width) minmax(0, 1fr);
+  gap: var(--copy-gap);
+  align-items: center;
+  margin-left: var(--copy-left);
+  padding: 10px 0 26px;
+  opacity: .5;
+  transform: translateY(-8px) scaleY(.96);
+  transform-origin: center top;
+  transition: transform 840ms cubic-bezier(.2, .88, .25, 1.07), opacity 420ms ease;
+}
+.project.is-selected .project-reveal-inner { pointer-events: auto; opacity: 1; transform: none; }
+.project-description {
+  display: block;
+  align-self: start;
+  min-height: var(--photo-height);
+  color: #767676;
+  text-align: left;
+  text-decoration: none;
+  font-size: .75rem;
+  line-height: 1.55;
+  opacity: 0;
+  filter: blur(5px);
+  transform: translateY(7px);
+  transition: opacity 520ms ease, filter 620ms var(--ease), transform 780ms var(--ease);
+}
+.project-description .glass-text--prose { white-space: pre-line; }
+.project.is-selected .project-description { opacity: 1; filter: none; transform: none; }
+
+.photo-strip {
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x pan-y;
+  cursor: grab;
+  -webkit-mask-image: linear-gradient(to right, transparent, rgba(0,0,0,.08) calc(var(--fade-width) * .18), rgba(0,0,0,.35) calc(var(--fade-width) * .43), rgba(0,0,0,.78) calc(var(--fade-width) * .76), #000 var(--fade-width));
+  mask-image: linear-gradient(to right, transparent, rgba(0,0,0,.08) calc(var(--fade-width) * .18), rgba(0,0,0,.35) calc(var(--fade-width) * .43), rgba(0,0,0,.78) calc(var(--fade-width) * .76), #000 var(--fade-width));
+}
+.preview-track {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: max-content;
+  min-width: 100%;
+  /* The first image begins near the title. The viewport stops beside the copy. */
+  padding-left: max(var(--fade-width), calc(50vw - var(--rail-left) - var(--photo-height) * var(--first-ratio, 1) / 2));
+  padding-right: max(18px, calc(50vw - var(--photo-height) * var(--last-ratio, 1) / 2));
+}
+.photo-strip::-webkit-scrollbar { display: none; }
+.photo-strip:focus-visible { outline: 1px solid #686868; outline-offset: 4px; }
+.photo-strip.is-dragging, .photo-strip.is-dragging a { cursor: grabbing; }
+.preview-photo {
+  display: block;
+  flex: 0 0 auto;
+  width: calc(var(--photo-height) * var(--ratio, 1));
+  height: var(--photo-height);
+  cursor: inherit;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.preview-photo img { display: block; width: 100%; height: 100%; object-fit: contain; -webkit-user-drag: none; }
+
+@media (hover: hover) and (pointer: fine) {
+  .photography {
+    --flow-time: 1040ms;
+    --fade-width: clamp(68px, 7vw, 108px);
+  }
+  .project-title:hover { color: #000; }
+  .project-description:hover { color: #626262; }
+  /* Brief passes show a partial reveal, then flow straight into the next one. */
+  .project.is-retiring .project-reveal { transition-delay: 60ms, 0ms, 60ms; }
+  .project-reveal, .project-reveal-inner { opacity: 1; }
+  /* Blur the clipped viewport once, rather than every full-size image. */
+  .photo-strip {
+    filter: blur(6px);
+    transition: filter 640ms cubic-bezier(.16, 1, .3, 1);
+  }
+  .project.is-selected .photo-strip { filter: none; }
+}
+@media (max-width: 700px) {
+  .photography { --photo-height: 76px; padding-top: max(124px, 37svh); }
+  .preview-track { gap: 5px; }
+}
+@media (max-width: 380px) {
+  .photography { --photo-height: 64px; --copy-left: 16px; --copy-width: 112px; --copy-gap: 14px; }
+}
+@media (max-height: 620px) { .photography { padding-top: 120px; } }
+@media (prefers-reduced-motion: reduce) {
+  .project-list, .project-title, .project-reveal, .project-reveal-inner, .project-description { transition: none; }
+  .project.is-retiring .project-reveal { transition-delay: 0s; }
+  .project-reveal-inner { transform: none; }
+  .project-description { filter: none; transform: none; }
+  .photo-strip { filter: none; transition: none; }
+}
