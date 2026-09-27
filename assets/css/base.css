@@ -1,3 +1,32 @@
+/* TWO TEXT TYPES — edit these two sizes to change text across the website.
+   Titles: navigation, project names, gallery names, and contact links.
+   Subtitles: descriptions, dates, photo counts, and back links.
+   Hover enlarges an interactive title by 12.5%; it is not a separate text type. */
+:root {
+  --title-size: 20px;
+  --subtitle-size: 12px;
+}
+
+body {
+  font: 400 var(--subtitle-size)/1.5 Arial, Helvetica, sans-serif;
+}
+button, input, select, textarea { font: inherit; }
+
+.home-title,
+.project-title,
+.coverflow-caption,
+.contact a,
+.lightbox-close,
+h1, h2, h3, h4, h5, h6 {
+  font: 400 var(--title-size)/1.5 Arial, Helvetica, sans-serif;
+}
+
+.project-description,
+.coverflow-count,
+.site-back {
+  font: 400 var(--subtitle-size)/1.5 Arial, Helvetica, sans-serif;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -17,7 +46,6 @@ body {
   min-height: 100svh;
   background: #ffffff;
   color: #000000;
-  font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -94,9 +122,6 @@ body {
   padding: 10px 16px;
   transform: translateX(-50%);
   color: #686868;
-  font-size: 1rem;
-  font-weight: 400;
-  line-height: 1.5;
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
 }

@@ -1,5 +1,6 @@
 (() => {
   const page = document.querySelector('.photography');
+  PhotoProjects.renderList(page.querySelector('.project-list'));
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const hover = matchMedia('(any-hover: hover) and (any-pointer: fine)');
   const records = [...page.querySelectorAll('.project')].map(node => ({
@@ -194,7 +195,16 @@
   records.forEach(record => {
     const { title, strip, images } = record;
     const ratio = image => Number(image.getAttribute('width')) / Number(image.getAttribute('height'));
-    images.forEach(image => image.parentElement.style.setProperty('--ratio', ratio(image)));
+    images.forEach(image => {
+      image.parentElement.style.setProperty('--ratio', ratio(image));
+      PhotoProjects.measure(image, () => {
+        image.parentElement.style.setProperty('--ratio', ratio(image));
+        strip.style.setProperty('--first-ratio', ratio(images[0]));
+        strip.style.setProperty('--last-ratio', ratio(images.at(-1)));
+        record.max = Math.max(0, strip.scrollWidth - strip.clientWidth);
+        if (active === record) { target = clamp(target); position = clamp(position); }
+      });
+    });
     strip.style.setProperty('--first-ratio', ratio(images[0]));
     strip.style.setProperty('--last-ratio', ratio(images.at(-1)));
     title.addEventListener('click', event => {

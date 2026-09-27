@@ -1,0 +1,120 @@
+ADDING A PHOTOGRAPHY PROJECT
+
+Website folder: F:\nategud.com\9-3-2026
+The only code file you edit: photography\projects.js
+
+The category list, hover previews, and Cover Flow galleries now all use that
+one file. No separate gallery page, duplicated photo list, or pixel dimensions
+are needed for a new project. Existing gallery links still work.
+
+EXAMPLE: ADD WYOMING
+
+1. Put your photographs in a new folder:
+
+   photography\photos\wyoming\
+
+   For example, put mountains.jpg, river.jpg, and camp.jpg in that folder.
+   Use your actual photo filenames. JPG, PNG, and WebP files work.
+   Keep filenames and capitalization exact. Simple lowercase names are easiest.
+
+2. Open photography\projects.js in Notepad (right-click > Open with > Notepad).
+   Make a backup copy first. Find this line:
+
+   window.PHOTO_PROJECTS = [
+
+   Paste this COMPLETE block immediately below that line to put Wyoming first:
+
+  {
+    id: "wyoming",
+    title: "wyoming",
+    date: "9-26",
+    description: "Your project description goes here.",
+    photos: ["mountains.jpg", "river.jpg", "camp.jpg"],
+  },
+
+3. Change the description, date, and photo filenames. Save the file.
+   Open index.html and go to photography. Wyoming appears automatically,
+   with a hover preview and a complete Cover Flow gallery.
+
+   If you already had the website open, refresh it. If a hosted copy looks
+   unchanged after uploading, use Ctrl+F5 to bypass the browser cache.
+
+WHAT EACH LINE MEANS
+
+id          The folder name and unique project identifier. Use lowercase letters,
+            numbers, and hyphens only. The id must match the photo folder exactly.
+            Example: id "new-york" uses photography\photos\new-york\.
+title       What visitors see. It can contain spaces: "new york".
+date        The short date shown with the description, such as "9-26".
+description Your caption. To add a line break, type \n inside the quoted text.
+photos      The exact filenames, in the order you want visitors to see them.
+
+You can list each filename on its own line if that is easier:
+
+    photos: [
+      "mountains.jpg",
+      "river.jpg",
+      "camp.jpg",
+    ],
+
+Keep the quotes, commas, brackets, and braces from the example. Do not paste
+the // marks from the commented example at the top of projects.js. A normal
+apostrophe is fine inside double quotes. If your caption needs double quotes,
+write them as \"quoted words\". Avoid smart/curly quotes around code values.
+Save as projects.js, not projects.js.txt. If Notepad asks, choose UTF-8 and
+All files. You only need a normal text editor and browser. No terminal,
+account, installation, or internet connection is required.
+
+SHORTCUT FOR NUMBERED PHOTOS
+
+If your files are named wyoming1.jpg, wyoming2.jpg, ... wyoming12.jpg, you can
+replace the entire photos array with:
+
+    photos: 12,
+
+The names must be the id followed by a number, starting at 1, with no gaps,
+spaces, parentheses, or leading zeros, ending in .jpg. Existing projects use
+this shortcut. If your filenames differ, use the explicit list instead; there
+is no need to rename your files.
+
+ADD, REMOVE, OR REORDER PHOTOS LATER
+
+- Add the new image to the project's photo folder and add its filename to photos.
+- For numbered projects, increase photos from 12 to 13 after adding wyoming13.jpg.
+- Delete a filename from photos to remove it from the website without deleting
+  the original image. Change a numbered count to a filename list to skip images.
+- Reorder filenames to change photo order. Convert a numbered count into an
+  explicit list if you want a custom order.
+- New images' sizes are detected automatically. Never crop them for Cover Flow.
+
+REORDER OR REMOVE PROJECTS
+
+Move or delete a complete { ... }, block in projects.js. The block order is
+the category order. Keep a comma after every block, including the last one.
+Keep the opening window.PHOTO_PROJECTS = [ and the closing ]; in place.
+Removing a block does not delete the photographs on disk.
+
+EXISTING PROJECTS
+
+Leave the page line on existing projects alone. It preserves old addresses
+such as projects/sawtooth.html for Idaho. New projects do not need a page line.
+Their gallery address is created automatically. Wyoming's will be:
+
+   photography/projects/gallery.html?project=wyoming
+
+You do not need to edit project-gallery.js, photography.js, project-data.js,
+CSS, or any HTML page to add a project. The hidden dimensions/cache data for
+the original photos is internal; new filenames are handled automatically.
+
+OFFLINE AND UPLOADING
+
+Double-click index.html to browse locally. This setup uses local script files,
+so it does not need a server, an installation, or an internet connection.
+To publish later, upload the updated projects.js and the new photos folder
+to their matching locations on your existing host. The initial refactor also
+needs its updated support files deployed; uploading the full website folder
+is the simplest way to deploy this version the first time.
+
+If an image is missing, check the filename, extension, capitalization, id,
+and folder location. If the entire category list is missing after an edit,
+undo that edit and compare the punctuation with the complete example above.

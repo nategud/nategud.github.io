@@ -13,27 +13,13 @@ body {
 .home-links {
   width: min(430px, 100%);
   display: grid;
-  grid-auto-rows: minmax(48px, auto);
   align-items: center;
   justify-items: center;
   gap: 0;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Match the closed photography list; glass hover and entrance are shared. */
-.home-title {
-  display: inline-flex;
-  align-items: center;
-  min-height: 48px;
-  padding: 9px 0;
-  color: #000000;
-  font: 400 1rem/1.5 Arial, Helvetica, sans-serif;
-  text-decoration: none;
-}
-.home-title:focus-visible {
-  outline: 1px solid currentColor;
-  outline-offset: 4px;
-}
+/* Title styles and the 48px row height are shared in glass.css. */
 
 @media (max-width: 700px) {
   .home {

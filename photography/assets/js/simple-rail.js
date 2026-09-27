@@ -1,293 +1,213 @@
-(function () {
-  class SimpleHorizontalRail {
+(() => {
+  // A continuous photo index drives every input method and every 3D transform.
+  // The animation frame stops completely when the selected photo settles.
+  class CoverFlowRail {
     constructor(options) {
-      this.container = options.container;
-      this.track = options.track;
-      this.items = options.items;
-      this.initialIndex = options.initialIndex ?? 0;
-      this.onActiveChange = options.onActiveChange || (() => {});
-      this.onProgress = options.onProgress || (() => {});
-      this.reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-
+      Object.assign(this, options);
+      this.reduced = matchMedia('(prefers-reduced-motion: reduce)');
+      this.position = this.target = options.initialIndex || 0;
       this.activeIndex = -1;
-      this.scrollFrame = null;
-      this.motionFrame = null;
-      this.snapTimer = null;
-      this.dragging = false;
-      this.dragged = false;
-      this.pointerType = "mouse";
-      this.dragStartX = 0;
-      this.dragStartScroll = 0;
-      this.lastPointerX = 0;
-      this.lastPointerTime = 0;
-      this.velocity = 0;
-      this.lastMotionTime = 0;
-      this.lastWheelStep = 0;
-      this.itemCenters = [];
-      this.maximum = 0;
-      this.viewportWidth = 0;
-
+      this.frame = 0;
+      this.snapTimer = 0;
+      this.drag = null;
+      this.suppressClickUntil = 0;
+      this.lastWheel = -Infinity;
       this.bindEvents();
-      requestAnimationFrame(() => this.refresh(this.initialIndex));
+      this.refresh();
+      this.observer = new ResizeObserver(() => this.refresh());
+      this.observer.observe(this.container);
     }
 
-    clamp(value, minimum, maximum) {
-      return Math.max(minimum, Math.min(maximum, value));
-    }
+    clamp(value) { return Math.max(0, Math.min(this.items.length - 1, value)); }
+    getNearestIndex() { return Math.round(this.position); }
+    consumeDragged() { return performance.now() < this.suppressClickUntil; }
 
-    clampIndex(index) {
-      return this.clamp(index, 0, this.items.length - 1);
-    }
-
-    getMaxScroll() {
-      return this.maximum;
-    }
-
-    setEdgePadding() {
-      if (!this.items.length) return;
-      const firstPadding = Math.max(
-        0,
-        this.container.clientWidth / 2 - this.items[0].offsetWidth / 2
-      );
-      const lastPadding = Math.max(
-        0,
-        this.container.clientWidth / 2 - this.items[this.items.length - 1].offsetWidth / 2
-      );
-      this.track.style.paddingLeft = `${firstPadding}px`;
-      this.track.style.paddingRight = `${lastPadding}px`;
-    }
-
-    stopMotion() {
-      if (this.motionFrame) cancelAnimationFrame(this.motionFrame);
-      if (this.snapTimer) clearTimeout(this.snapTimer);
-      this.motionFrame = null;
-      this.snapTimer = null;
-      this.velocity = 0;
-      this.lastMotionTime = 0;
-    }
-
-    centerItem(index, behavior = "smooth") {
-      const item = this.items[this.clampIndex(index)];
-      if (!item) return;
-      this.stopMotion();
-      const left = item.offsetLeft + item.offsetWidth / 2 - this.container.clientWidth / 2;
-      this.container.scrollTo({
-        left,
-        behavior: this.reducedMotion.matches ? "auto" : behavior
+    refresh() {
+      const width = this.container.clientWidth;
+      const height = this.container.clientHeight;
+      const maxWidth = Math.min(width * (width < 700 ? .66 : .40), 760);
+      const maxHeight = Math.max(72, Math.min(height * .45, height - 280));
+      this.sizes = this.items.map(card => {
+        const image = card.querySelector('.photo-image');
+        const ratio = Number(image.getAttribute('width')) / Number(image.getAttribute('height'));
+        const w = Math.min(maxWidth, maxHeight * ratio);
+        const h = w / ratio;
+        card.style.width = `${w}px`;
+        card.style.height = `${h}px`;
+        return { width: w, height: h };
       });
+      this.stride = Math.max(100, Math.min(width * .36, 360));
+      this.sideStep = Math.max(28, Math.min(width * .055, 78));
+      this.render();
     }
 
-    getNearestIndex() {
-      const center = this.container.scrollLeft + this.viewportWidth / 2;
-      let nearestIndex = 0;
-      let nearestDistance = Infinity;
+    render() {
+      const index = this.getNearestIndex();
+      const low = Math.floor(this.position), high = Math.ceil(this.position);
+      const blend = this.position - low;
+      const mix = key => this.sizes[low][key] * (1 - blend) + this.sizes[high][key] * blend;
+      const width = mix('width'), height = mix('height');
+      const reflection = Math.min(100, height * .34);
+      const floor = Math.min(
+        (this.container.clientHeight + height - reflection - 56) / 2,
+        this.container.clientHeight - reflection - 170
+      );
+      this.container.style.setProperty('--floor', `${floor}px`);
+      this.container.style.setProperty('--reflection-depth', `${reflection}px`);
 
-      this.itemCenters.forEach((itemCenter, index) => {
-        const distance = Math.abs(itemCenter - center);
-        if (distance < nearestDistance) {
-          nearestDistance = distance;
-          nearestIndex = index;
-        }
+      this.items.forEach((card, i) => {
+        const distance = i - this.position;
+        const absolute = Math.abs(distance);
+        const visible = absolute <= 6;
+        card.style.visibility = visible ? 'visible' : 'hidden';
+        card.inert = !visible;
+        if (!visible) return;
+        // Load only the nearby photographs, with the same cached source for the mirror.
+        card.querySelectorAll('img[data-src]').forEach(image => {
+          image.src = image.dataset.src;
+          image.removeAttribute('data-src');
+        });
+        const turn = Math.min(absolute, 1);
+        const side = Math.sign(distance);
+        const spacing = width * .5 + this.sizes[i].width * .10 + 12;
+        const x = side * (turn * spacing + Math.max(0, absolute - 1) * this.sideStep);
+        const z = -turn * this.sizes[i].width * .47;
+        card.style.transform = `translate(-50%, -100%) translate3d(${x}px, 0, ${z}px) rotateY(${-side * turn * 65}deg)`;
+        card.style.zIndex = String(10000 - Math.round(absolute * 1000));
       });
 
-      return nearestIndex;
-    }
-
-    updateActive() {
-      const nextIndex = this.getNearestIndex();
-      if (nextIndex === this.activeIndex) return;
-
-      const previous = this.items[this.activeIndex];
-      previous?.classList.remove("is-active");
-      previous?.removeAttribute("aria-current");
-      const current = this.items[nextIndex];
-      current.classList.add("is-active");
-      current.setAttribute("aria-current", "true");
-
-      this.activeIndex = nextIndex;
-      this.onActiveChange(nextIndex, this.items[nextIndex]);
-    }
-
-    emitProgress() {
-      const maximum = this.getMaxScroll();
-      this.onProgress(
-        maximum ? this.container.scrollLeft / maximum : 0,
-        this.activeIndex
-      );
-    }
-
-    refresh(index = this.activeIndex < 0 ? this.initialIndex : this.activeIndex) {
-      this.setEdgePadding();
-      this.viewportWidth = this.container.clientWidth;
-      // Photo dimensions are fixed by CSS; measure once per resize, not per scroll.
-      this.itemCenters = this.items.map(item => item.offsetLeft + item.offsetWidth / 2);
-      this.maximum = Math.max(0, this.container.scrollWidth - this.container.clientWidth);
-      this.centerItem(index, "auto");
-      this.updateActive();
-      this.emitProgress();
-    }
-
-    setProgress(progress) {
-      this.stopMotion();
-      this.container.scrollLeft = this.clamp(progress, 0, 1) * this.getMaxScroll();
-      this.updateActive();
-      this.emitProgress();
-    }
-
-    snapToNearest() {
-      this.centerItem(this.getNearestIndex());
-    }
-
-    scheduleSnap(delay = 140) {
-      if (this.snapTimer) clearTimeout(this.snapTimer);
-      this.snapTimer = setTimeout(() => {
-        this.snapTimer = null;
-        this.snapToNearest();
-      }, delay);
-    }
-
-    consumeDragged() {
-      const dragged = this.dragged;
-      this.dragged = false;
-      return dragged;
-    }
-
-    startInertia() {
-      if (this.reducedMotion.matches || Math.abs(this.velocity) < 0.35) {
-        this.snapToNearest();
-        return;
+      if (index !== this.activeIndex) {
+        this.items[this.activeIndex]?.classList.remove('is-active');
+        this.items[this.activeIndex]?.removeAttribute('aria-current');
+        this.activeIndex = index;
+        this.items[index].classList.add('is-active');
+        this.items[index].setAttribute('aria-current', 'true');
+        this.onActiveChange?.(index);
       }
+      this.onProgress?.(this.items.length > 1 ? this.position / (this.items.length - 1) : 0, index);
+    }
 
-      const friction = this.pointerType === "touch" ? 0.955 : 0.93;
-      this.lastMotionTime = 0;
+    stop() {
+      cancelAnimationFrame(this.frame);
+      clearTimeout(this.snapTimer);
+      this.frame = 0;
+      this.snapTimer = 0;
+    }
 
-      const coast = timestamp => {
-        const frameScale = this.lastMotionTime
-          ? this.clamp((timestamp - this.lastMotionTime) / 16.667, 0.25, 2.5)
-          : 1;
-        this.lastMotionTime = timestamp;
-
-        const before = this.container.scrollLeft;
-        this.container.scrollLeft += this.velocity * frameScale;
-        const hitBoundary = this.container.scrollLeft === before && Math.abs(this.velocity) > 0.5;
-        this.velocity *= Math.pow(friction, frameScale);
-
-        if (hitBoundary || Math.abs(this.velocity) < 0.35) {
-          this.motionFrame = null;
-          this.velocity = 0;
-          this.snapToNearest();
-          return;
-        }
-
-        this.motionFrame = requestAnimationFrame(coast);
+    animate() {
+      if (this.frame) return;
+      let last = performance.now();
+      const tick = now => {
+        this.frame = 0;
+        // A frame timestamp can precede performance.now() from the scheduling call.
+        const elapsed = Math.max(0, Math.min(50, now - last));
+        last = now;
+        const difference = this.target - this.position;
+        this.position = this.reduced.matches || Math.abs(difference) < .001
+          ? this.target : this.clamp(this.position + difference * (1 - Math.exp(-elapsed / 85)));
+        this.render();
+        if (this.position !== this.target) this.frame = requestAnimationFrame(tick);
       };
-
-      this.motionFrame = requestAnimationFrame(coast);
+      this.frame = requestAnimationFrame(tick);
     }
 
-    finishDrag(event) {
-      if (!this.dragging) return;
-      this.dragging = false;
-      this.container.classList.remove("is-dragging");
+    centerItem(index) {
+      clearTimeout(this.snapTimer);
+      this.target = this.clamp(Math.round(index));
+      this.animate();
+    }
+    setProgress(progress) {
+      this.stop();
+      this.target = this.position = this.clamp(progress * (this.items.length - 1));
+      this.render();
+    }
+    snapToNearest() { this.centerItem(this.position); }
 
-      if (this.container.hasPointerCapture(event.pointerId)) {
-        this.container.releasePointerCapture(event.pointerId);
-      }
-
-      if (this.dragged) this.startInertia();
-      else this.velocity = 0;
-
-      setTimeout(() => {
-        if (!this.dragging) this.dragged = false;
-      }, 0);
+    finishDrag(event, cancelled = false) {
+      if (!this.drag || (event.pointerId !== undefined && event.pointerId !== this.drag.id)) return;
+      const drag = this.drag;
+      this.drag = null;
+      this.container.classList.remove('is-dragging');
+      if (this.container.hasPointerCapture(drag.id)) this.container.releasePointerCapture(drag.id);
+      if (drag.moved) {
+        this.stop();
+        this.suppressClickUntil = performance.now() + 400;
+        const velocity = cancelled || performance.now() - drag.time > 90 ? 0 : drag.velocity;
+        const coast = Math.max(-2, Math.min(2, velocity * 150));
+        this.centerItem(this.position + coast);
+      } else this.snapToNearest();
     }
 
     bindEvents() {
-      this.container.addEventListener("scroll", () => {
-        if (this.scrollFrame) return;
-        this.scrollFrame = requestAnimationFrame(() => {
-          this.scrollFrame = null;
-          this.updateActive();
-          this.emitProgress();
-        });
-      }, { passive: true });
-
-      this.container.addEventListener("wheel", event => {
-        const amount = Math.abs(event.deltaY) >= Math.abs(event.deltaX)
-          ? event.deltaY
-          : event.deltaX;
+      this.container.addEventListener('wheel', event => {
+        if (event.ctrlKey) return; // Keep browser pinch/zoom available.
+        const amount = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
         if (!amount) return;
         event.preventDefault();
-        this.stopMotion();
-
-        const mechanical = event.deltaMode !== 0 || Math.abs(amount) >= 50;
-        if (mechanical) {
-          const now = performance.now();
-          if (now - this.lastWheelStep < 85) return;
-          this.lastWheelStep = now;
-          this.centerItem(this.getNearestIndex() + Math.sign(amount));
+        if (this.drag) return;
+        const now = performance.now();
+        if (event.deltaMode !== 0 || Math.abs(amount) >= 50) {
+          if (now - this.lastWheel < 90) return;
+          this.lastWheel = now;
+          this.centerItem(Math.round(this.target) + Math.sign(amount));
         } else {
-          this.container.scrollLeft += amount;
-          this.scheduleSnap();
+          this.target = this.clamp(this.target + amount / this.stride);
+          this.animate();
+          clearTimeout(this.snapTimer);
+          this.snapTimer = setTimeout(() => this.centerItem(this.target), 140);
         }
       }, { passive: false });
 
-      this.container.addEventListener("pointerdown", event => {
-        if (event.pointerType === "mouse" && event.button !== 0) return;
-        this.stopMotion();
-        this.container.scrollTo({ left: this.container.scrollLeft, behavior: "auto" });
-        this.dragging = true;
-        this.dragged = false;
-        this.pointerType = event.pointerType || "mouse";
-        this.dragStartX = event.clientX;
-        this.dragStartScroll = this.container.scrollLeft;
-        this.lastPointerX = event.clientX;
-        this.lastPointerTime = performance.now();
-        this.velocity = 0;
+      this.container.addEventListener('pointerdown', event => {
+        if (!event.isPrimary || event.button !== 0 || this.drag) return;
+        this.stop();
+        this.target = this.position;
+        this.drag = { id: event.pointerId, startX: event.clientX, start: this.position,
+          lastX: event.clientX, time: performance.now(), velocity: 0, moved: false };
       });
-
-      this.container.addEventListener("pointermove", event => {
-        if (!this.dragging) return;
-        const now = performance.now();
-        const distance = event.clientX - this.dragStartX;
-
-        if (!this.dragged && Math.abs(distance) > 6) {
-          this.dragged = true;
-          this.container.classList.add("is-dragging");
-          try {
-            this.container.setPointerCapture(event.pointerId);
-          } catch (error) {}
+      this.container.addEventListener('pointermove', event => {
+        const drag = this.drag;
+        if (!drag || event.pointerId !== drag.id) return;
+        const dx = drag.startX - event.clientX;
+        if (!drag.moved && Math.abs(dx) > 6) {
+          drag.moved = true;
+          this.container.classList.add('is-dragging');
+          this.container.setPointerCapture(drag.id);
         }
-
-        if (this.dragged) {
-          event.preventDefault();
-          this.container.scrollLeft = this.dragStartScroll - distance;
-          const elapsed = Math.max(now - this.lastPointerTime, 1);
-          const instantVelocity = ((this.lastPointerX - event.clientX) / elapsed) * 16.667;
-          this.velocity = this.clamp(
-            this.velocity * 0.28 + instantVelocity * 0.72,
-            -70,
-            70
-          );
-        }
-
-        this.lastPointerX = event.clientX;
-        this.lastPointerTime = now;
-      });
-
-      this.container.addEventListener("pointerup", event => this.finishDrag(event));
-      this.container.addEventListener("pointercancel", event => this.finishDrag(event));
-
-      this.container.addEventListener("keydown", event => {
-        if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+        if (!drag.moved) return;
         event.preventDefault();
-        const direction = event.key === "ArrowRight" ? 1 : -1;
-        this.centerItem(this.getNearestIndex() + direction);
+        const now = performance.now();
+        const speed = (drag.lastX - event.clientX) / this.stride / Math.max(1, now - drag.time);
+        drag.velocity = drag.velocity * .4 + speed * .6;
+        drag.lastX = event.clientX;
+        drag.time = now;
+        this.position = this.target = this.clamp(drag.start + dx / this.stride);
+        if (!this.frame) this.frame = requestAnimationFrame(() => { this.frame = 0; this.render(); });
       });
-
-      window.addEventListener("resize", () => this.refresh());
+      this.container.addEventListener('pointerup', event => this.finishDrag(event));
+      this.container.addEventListener('pointercancel', event => this.finishDrag(event, true));
+      this.container.addEventListener('lostpointercapture', event => this.finishDrag(event, true));
+      this.container.addEventListener('pointerleave', event => {
+        if (this.drag && !this.drag.moved) this.finishDrag(event, true);
+      });
+      this.container.addEventListener('keydown', event => {
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+        event.preventDefault();
+        if (event.key === 'Home') this.centerItem(0);
+        else if (event.key === 'End') this.centerItem(this.items.length - 1);
+        else this.centerItem(Math.round(this.target) + (event.key === 'ArrowRight' ? 1 : -1));
+      });
+      window.addEventListener('blur', () => this.finishDrag({}, true));
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          this.finishDrag({}, true);
+          this.stop();
+          this.position = this.target = Math.round(this.target);
+          this.render();
+        }
+      });
+      this.reduced.addEventListener('change', () => { this.centerItem(this.target); });
     }
   }
-
-  window.SimpleHorizontalRail = SimpleHorizontalRail;
+  window.CoverFlowRail = CoverFlowRail;
 })();

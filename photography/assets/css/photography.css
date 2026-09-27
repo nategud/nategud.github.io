@@ -31,34 +31,8 @@ body { overflow-x: hidden; }
   pointer-events: none;
 }
 .project.is-selected .project-hover-bridge { pointer-events: auto; }
-.project-title {
-  position: relative;
-  display: inline-flex;
-  vertical-align: top;
-  align-items: center;
-  min-height: 48px;
-  padding: 9px 0;
-  color: #686868;
-  text-decoration: none;
-  font: 400 1rem/1.5 Arial, Helvetica, sans-serif;
-  -webkit-tap-highlight-color: transparent;
-  transform: translateY(0);
-  transition:
-    color 180ms ease,
-    font-size 580ms cubic-bezier(.2, .9, .25, 1.12),
-    transform 580ms cubic-bezier(.2, .9, .25, 1.12);
-}
-.project-title-text {
-  vertical-align: middle;
-}
-/* Selection stays visible while the pointer is over photos or the caption.
-   The larger text fits the existing 48px title row; shared glass hover stays inside. */
-.project.is-selected .project-title {
-  color: #000;
-  font-size: 1.25rem;
-  transform: translateY(-2px);
-}
-.project-title:focus-visible, .project-description:focus-visible {
+/* Title styles live in the shared assets/css/glass.css file. */
+.project-description:focus-visible {
   outline: 1px solid currentColor;
   outline-offset: 4px;
 }
@@ -107,8 +81,6 @@ body { overflow-x: hidden; }
   color: #767676;
   text-align: left;
   text-decoration: none;
-  font-size: .75rem;
-  line-height: 1.55;
   opacity: 0;
   filter: blur(5px);
   transform: translateY(7px);
@@ -157,7 +129,6 @@ body { overflow-x: hidden; }
     --flow-time: 1040ms;
     --fade-width: clamp(68px, 7vw, 108px);
   }
-  .project-title:hover { color: #000; }
   .project-description:hover { color: #626262; }
   /* Brief passes show a partial reveal, then flow straight into the next one. */
   .project.is-retiring .project-reveal { transition-delay: 60ms, 0ms, 60ms; }
@@ -178,7 +149,7 @@ body { overflow-x: hidden; }
 }
 @media (max-height: 620px) { .photography { padding-top: 120px; } }
 @media (prefers-reduced-motion: reduce) {
-  .project-list, .project-title, .project-reveal, .project-reveal-inner, .project-description { transition: none; }
+  .project-list, .project-reveal, .project-reveal-inner, .project-description { transition: none; }
   .project.is-retiring .project-reveal { transition-delay: 0s; }
   .project-reveal-inner { transform: none; }
   .project-description { filter: none; transform: none; }

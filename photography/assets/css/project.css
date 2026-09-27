@@ -1,92 +1,87 @@
-body {
+/* Cover Flow: the photographs and their reflections rotate together in 3D. */
+body { overflow: hidden; }
+.site-header { z-index: 10; }
+.project-page, .photo-carousel { width: 100%; height: 100svh; }
+.photo-carousel {
+  position: relative;
   overflow: hidden;
-}
-
-.site-header {
-  z-index: 10;
-}
-
-.project-page,
-.photo-carousel {
-  width: 100%;
-  min-height: 100svh;
-  height: 100svh;
-}
-
-.photo-carousel {
-  overflow-x: auto;
-  overflow-y: hidden;
   cursor: grab;
-  touch-action: none;
-  overscroll-behavior-x: contain;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y pinch-zoom;
   -webkit-tap-highlight-color: transparent;
-}
-
-.photo-carousel::-webkit-scrollbar {
-  display: none;
-}
-
-.photo-carousel.is-dragging {
-  cursor: grabbing;
   user-select: none;
-  -webkit-user-select: none;
 }
-
-.photo-carousel:focus-visible {
-  outline: none;
-}
-
+.photo-carousel.is-dragging { cursor: grabbing; }
+.photo-carousel:focus-visible { outline: none; }
 .photo-track {
-  display: flex;
-  align-items: center;
-  gap: clamp(9px, 1vw, 14px);
-  width: max-content;
-  min-width: 100%;
-  height: 100%;
+  position: absolute;
+  inset: 0;
+  perspective: 1600px;
+  perspective-origin: 50% var(--floor, 58%);
 }
-
+/* A quiet white glass surface. The mirrored images supply its visible sheen. */
+.photo-carousel::before {
+  content: "";
+  position: absolute;
+  top: var(--floor, 58%);
+  left: 0;
+  right: 0;
+  height: var(--reflection-depth, 100px);
+  background: linear-gradient(rgba(238, 241, 243, .3), rgba(255, 255, 255, 0));
+  pointer-events: none;
+}
 .photo-card {
-  --photo-long-edge: min(68vw, 72svh, max(100px, calc(100svh - 220px)), 820px);
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
+  position: absolute;
+  left: 50%;
+  top: var(--floor, 58%);
+  transform-origin: center bottom;
+  transform-style: preserve-3d;
+  will-change: transform;
 }
-
-.photo-card.is-landscape {
-  width: var(--photo-long-edge);
-  height: calc(var(--photo-long-edge) * var(--cross-factor));
-}
-
-.photo-card.is-portrait {
-  width: calc(var(--photo-long-edge) * var(--cross-factor));
-  height: var(--photo-long-edge);
-}
-
 .photo-card img {
   display: block;
   width: 100%;
   height: 100%;
-  background: #f1f1f1;
-  box-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.025),
-    0 18px 54px rgba(0, 0, 0, 0.075);
-  transform: translateZ(0);
-  transform-origin: center center;
-  transition:
-    transform 150ms cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1);
-  cursor: zoom-in;
-  user-select: none;
-  -webkit-user-select: none;
+  object-fit: contain;
   -webkit-user-drag: none;
 }
-
-.photo-card img:focus-visible {
-  outline: 1px solid #000000;
-  outline-offset: 7px;
+.photo-image {
+  background: #f4f4f4;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .12);
+  cursor: pointer;
+  backface-visibility: hidden;
 }
+.photo-card.is-active .photo-image { cursor: zoom-in; }
+.photo-image:focus-visible { outline: 1px solid #686868; outline-offset: 5px; }
+.photo-reflection {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  /* This opaque surface hides reflections from cards farther back.
+     Fade only the mirrored image, never the surface that occludes them. */
+  background: #fff;
+  backface-visibility: hidden;
+}
+.photo-reflection img {
+  transform: scaleY(-1);
+  opacity: .20;
+  /* The image is flipped, so a bottom-up mask becomes a downward fade. */
+  -webkit-mask-image: linear-gradient(to top, #000, transparent 48%);
+  mask-image: linear-gradient(to top, #000, transparent 48%);
+}
+.coverflow-caption {
+  position: absolute;
+  z-index: 8;
+  top: calc(var(--floor, 58%) + var(--reflection-depth, 100px) + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.coverflow-count { display: block; margin-top: 3px; color: #777; }
 
 .gallery-scrubber {
   --progress: 0;
@@ -236,7 +231,6 @@ body {
   border: 0;
   background: transparent;
   color: #000000;
-  font: 300 28px/1 Arial, Helvetica, sans-serif;
   cursor: pointer;
   opacity: 0.58;
 }
@@ -251,43 +245,12 @@ body {
   outline-offset: 2px;
 }
 
-@media (max-width: 700px), (hover: none) and (pointer: coarse) {
-  .photo-track {
-    gap: 9px;
-  }
 
-  .photo-card {
-    --photo-long-edge: min(82vw, 60svh, max(100px, calc(100svh - 210px)), 480px);
-  }
-
-  .gallery-scrubber {
-    width: min(72vw, 320px);
-    height: 34px;
-    padding: 0 14px;
-  }
-
-  .photo-lightbox {
-    padding: 14px;
-  }
-
-  .photo-lightbox img {
-    max-width: 94vw;
-    max-height: 88svh;
-  }
+@media (max-width: 700px) {
+  .gallery-scrubber { width: min(72vw, 320px); height: 36px; padding: 0 14px; }
+  .photo-lightbox { padding: 14px; }
+  .photo-lightbox img { max-width: 94vw; max-height: 88svh; }
 }
-
-@media (max-height: 620px) {
-  .photo-card {
-    --photo-long-edge: min(58vw, 66svh, max(100px, calc(100svh - 210px)), 580px);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .photo-card img,
-  .gallery-scrubber,
-  .scrubber-thumb,
-  .photo-lightbox,
-  .photo-lightbox img {
-    transition: none;
-  }
+  .gallery-scrubber, .scrubber-thumb, .photo-lightbox, .photo-lightbox img { transition: none; }
 }

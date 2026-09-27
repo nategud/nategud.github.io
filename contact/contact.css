@@ -11,9 +11,6 @@
 .contact a {
   min-height: 3rem;
   color: #000000;
-  font-size: 1rem;
-  font-weight: 400;
-  line-height: 1.35;
 }
 
 @media (max-width: 700px) {

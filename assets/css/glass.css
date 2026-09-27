@@ -93,6 +93,52 @@ a:focus-visible > .glass-text { outline: none; }
 .glass-text--prose, .glass-text--prose::after { display: block; }
 .glass-text--prose { transform-origin: left center; }
 
+/* Home links and photography titles share these exact resting and active
+   styles. Change them here once to keep both pages identical.
+   Each closed row is 48px high, with no gap between rows. */
+.home-title,
+.project-title {
+  position: relative;
+  display: inline-flex;
+  vertical-align: top;
+  align-items: center;
+  min-height: 48px;
+  padding: 0;
+  color: #333;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  transform: translateY(0);
+  transition:
+    color 180ms ease,
+    font-size 580ms cubic-bezier(.2, .9, .25, 1.12),
+    transform 580ms cubic-bezier(.2, .9, .25, 1.12);
+}
+
+.home-title > .glass-text,
+.project-title-text { vertical-align: middle; }
+
+.home-title:hover,
+.home-title:focus-visible,
+.project-title:hover,
+.project-title:focus-visible,
+.project.is-selected .project-title {
+  color: #000;
+  font-size: calc(var(--title-size) * 1.125);
+  transform: translateY(-2px);
+}
+
+.home-title:focus-visible,
+.project-title:focus-visible {
+  outline: 1px solid currentColor;
+  outline-offset: 4px;
+}
+
+/* Keep the hover color solid and prevent a gray flash when pressed. */
+.home-title > .glass-text::after,
+.project-title > .glass-text::after { display: none; }
+.home-title:active > .glass-text,
+.project-title:active > .glass-text { opacity: 1; }
+
 /* Shared by the home navigation and photography titles. Change this one
    definition to update both entrances, including their top-to-bottom timing. */
 .text-arrive {
@@ -109,6 +155,7 @@ a:focus-visible > .glass-text { outline: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .text-arrive { animation: none; }
+  .home-title, .project-title { transition: none; }
   .glass-text,
   a:hover > .glass-text,
   a:focus-visible > .glass-text {
